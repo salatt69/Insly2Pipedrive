@@ -171,31 +171,31 @@ class Pipedrive:
         def person(org_id, info):
             url = f'{BASE_URL_V2}/persons'
             body = {
-                "name": info[0][1],
+                "name": info[1],
                 "owner_id": CREATOR_USER_ID,
                 "org_id": org_id,
                 "visible_to": 3,
                 "custom_fields": {
-                    INSLY_OID: info[0][0]
+                    INSLY_OID: info[0]
                 }
             }
             params = {'api_token': PIPEDRIVE_TOKEN}
 
             # Conditionally add emails if valid
-            if info[0][2] and is_email_valid(info[0][2]):
+            if info[2] and is_email_valid(info[2]):
                 body["emails"] = [
                     {
-                        "value": info[0][2],
+                        "value": info[2],
                         "primary": True,
                         "label": "email"
                     }
                 ]
 
             # Conditionally add phones if valid
-            if info[0][3] and is_phone_valid(info[0][3]):
+            if info[3] and is_phone_valid(info[3]):
                 body["phones"] = [
                     {
-                        "value": info[0][3],
+                        "value": info[3],
                         "primary": True,
                         "label": "phone_number"
                     }
@@ -208,7 +208,7 @@ class Pipedrive:
                 return response.json()['data']['id']
 
             else:
-                print(f"'add_person': '{info[0][0]}' Request failed with status code {response.status_code}")
+                print(f"'add_person': '{info[0]}' Request failed with status code {response.status_code}")
                 print(response.json())
 
         @staticmethod
@@ -217,28 +217,28 @@ class Pipedrive:
             params = {'api_token': PIPEDRIVE_TOKEN}
 
             body = {
-                "title": policy_info_arr[0][0],
+                "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
                 "person_id": p_id,
                 "org_id": org_id,
                 "pipeline_id": 1,
                 "stage_id": 1,
-                "currency": policy_info_arr[0][1],
-                "value": policy_info_arr[0][2],
-                "expected_close_date": policy_info_arr[0][4],
+                "currency": policy_info_arr[1],
+                "value": policy_info_arr[2],
+                "expected_close_date": policy_info_arr[4],
                 "status": "open",
                 "visible_to": 3,
                 "custom_fields": {
                     # RENEWED_OFFER_QUANTITY:         None,
                     # RENEWAL_START_DATE:             None,
                     # SELLER:                         None,
-                    POLICY_NO:                      policy_info_arr[0][5],
+                    POLICY_NO:                      policy_info_arr[5],
                     # RENEWAL_POLICY_QUANTITY:        None,
-                    PRODUCT:                        Pipedrive.find_custom_field(PRODUCT, policy_info_arr[0][8]),
+                    PRODUCT:                        Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
                     # POLICY_ON_ATTB:                 None,
-                    OBJECTS:                        policy_info_arr[0][3],
-                    END_DATE:                       policy_info_arr[0][4],
-                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[0][6]),
+                    OBJECTS:                        policy_info_arr[3],
+                    END_DATE:                       policy_info_arr[4],
+                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
                     # REGISTRATION_CERTIFICATE_NO:    None,
                     # RENEWAL:                        None,
                     # RENEWED_POLICY_INSURER:         None,
@@ -280,30 +280,30 @@ class Pipedrive:
             url = f'{BASE_URL_V2}/persons/{person_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
-                "name": info[0][1],
+                "name": info[1],
                 "owner_id": CREATOR_USER_ID,
                 "org_id": org_id,
                 "visible_to": 3,
                 "custom_fields": {
-                    INSLY_OID: info[0][0]
+                    INSLY_OID: info[0]
                 }
             }
 
             # Conditionally add emails if valid
-            if info[0][2] and is_email_valid(info[0][2]):
+            if info[2] and is_email_valid(info[2]):
                 body["emails"] = [
                     {
-                        "value": info[0][2],
+                        "value": info[2],
                         "primary": True,
                         "label": "email"
                     }
                 ]
 
             # Conditionally add phones if valid
-            if info[0][3] and is_phone_valid(info[0][3]):
+            if info[3] and is_phone_valid(info[3]):
                 body["phones"] = [
                     {
-                        "value": info[0][3],
+                        "value": info[3],
                         "primary": True,
                         "label": "phone_number"
                     }
@@ -322,27 +322,27 @@ class Pipedrive:
             url = f'{BASE_URL_V2}/deals/{deal_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
-                "title": policy_info_arr[0][0],
+                "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
                 "person_id": p_id,
                 "org_id": org_id,
                 "pipeline_id": 1,
                 "stage_id": 1,
-                "currency": policy_info_arr[0][1],
-                "value": policy_info_arr[0][2],
-                "expected_close_date": policy_info_arr[0][4],
+                "currency": policy_info_arr[1],
+                "value": policy_info_arr[2],
+                "expected_close_date": policy_info_arr[4],
                 "visible_to": 3,
                 "custom_fields": {
                     # RENEWED_OFFER_QUANTITY:         None,
                     # RENEWAL_START_DATE:             None,
                     # SELLER:                         None,
-                    POLICY_NO:                      policy_info_arr[0][5],
+                    POLICY_NO:                      policy_info_arr[5],
                     # RENEWAL_POLICY_QUANTITY:        None,
-                    PRODUCT:                        Pipedrive.find_custom_field(PRODUCT, policy_info_arr[0][8]),
+                    PRODUCT:                        Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
                     # POLICY_ON_ATTB:                 None,
-                    OBJECTS:                        policy_info_arr[0][3],
-                    END_DATE:                       policy_info_arr[0][4],
-                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[0][6]),
+                    OBJECTS:                        policy_info_arr[3],
+                    END_DATE:                       policy_info_arr[4],
+                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
                     # REGISTRATION_CERTIFICATE_NO:    None,
                     # RENEWAL:                        None,
                     # RENEWED_POLICY_INSURER:         None,
