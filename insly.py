@@ -52,8 +52,9 @@ def get_customer_policy(oid, counter):
                     p_number = policy.get('policy_no')
                     p_insurer = get_classifier_value(value=policy.get('policy_insurer'), classifier_field_name='insurer')
                     p_installment_status = policy['payment'][0]['policy_installment_status']
+                    p_type = get_classifier_value(value=policy.get('policy_type'), classifier_field_name='product')
                     policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
-                                        p_installment_status))
+                                        p_installment_status, p_type))
 
                 else:
                     print(f"#{counter} Policy {policy['policy_no']}"
@@ -99,7 +100,7 @@ def get_classifier_value(value, classifier_field_name: str):
     if response.status_code == 200:
         data = response.json()
 
-        return data[classifier_field_name][value]
+        return data.get(classifier_field_name, {}).get(value, value)
     else:
         print(f"'get_policy_classifiers': Request failed with status code {response.status_code}")
         return None
