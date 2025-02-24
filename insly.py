@@ -50,7 +50,7 @@ def get_customer_policy(oid, counter):
                     p_description = policy.get('policy_description')
                     p_date_end = datetime.strptime(policy.get('policy_date_end'), "%d.%m.%Y").strftime("%Y-%m-%d")
                     p_number = policy.get('policy_no')
-                    p_insurer = get_insurer(insurer=policy.get('policy_insurer'))
+                    p_insurer = get_classifier_value(value=policy.get('policy_insurer'), classifier_field_name='insurer')
                     p_installment_status = policy['payment'][0]['policy_installment_status']
                     policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
                                         p_installment_status))
@@ -90,7 +90,7 @@ def get_customer_list():
         return None
 
 
-def get_insurer(insurer):
+def get_classifier_value(value, classifier_field_name: str):
     url = 'https://vingo-api.insly.com/api/policy/getclassifier'
     headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
 
@@ -99,7 +99,7 @@ def get_insurer(insurer):
     if response.status_code == 200:
         data = response.json()
 
-        return data['insurer'][insurer]
+        return data[classifier_field_name][value]
     else:
         print(f"'get_policy_classifiers': Request failed with status code {response.status_code}")
         return None
