@@ -1,8 +1,11 @@
+import json
+
 import requests
 from datetime import datetime
 from helper import is_email_valid, is_phone_valid
 
-BASE_URL = 'https://api.pipedrive.com/api/v2'
+BASE_URL_V2 = 'https://api.pipedrive.com/api/v2'
+BASE_URL_V1 = 'https://api.pipedrive.com/v1'
 PIPEDRIVE_TOKEN = None
 CREATOR_USER_ID = 22609901  # Darija
 
@@ -31,10 +34,37 @@ class Pipedrive:
         global PIPEDRIVE_TOKEN
         PIPEDRIVE_TOKEN = token
 
+    @staticmethod
+    def find_custom_field(custom_field_key, option_label):
+
+        # Find field_id by its key from 'custom_field_ids.json'
+        with open('custom_field_ids.json', 'r') as f:
+            ids = json.load(f)
+        filed_id = ids.get(custom_field_key)
+
+        url = f'{BASE_URL_V1}/dealFields/{filed_id}'
+        params = {'api_token': PIPEDRIVE_TOKEN}
+
+        response = requests.get(url=url, params=params)
+
+        if response.status_code == 200:
+            data = response.json()
+
+            options = data["data"]["options"]
+            for option in options:
+                if option_label.lower() in option['label'].lower():
+                    return option['id']
+
+        else:
+            print(f'Failed while searching for custom field: {custom_field_key}. Code: {response.status_code}')
+            print(response.json())
+
+        pass
+
     class Search:
         @staticmethod
         def organization(org_name):
-            url = f'{BASE_URL}/organizations/search?term={org_name}'
+            url = f'{BASE_URL_V2}/organizations/search?term={org_name}'
             params = {'api_token': PIPEDRIVE_TOKEN, 'exact_match': 1}
 
             response = requests.get(url=url, params=params)
@@ -59,7 +89,7 @@ class Pipedrive:
 
         @staticmethod
         def person(person_name):
-            url = f'{BASE_URL}/persons/search?term={person_name}'
+            url = f'{BASE_URL_V2}/persons/search?term={person_name}'
             params = {'api_token': PIPEDRIVE_TOKEN, 'exact_match': 1}
 
             response = requests.get(url=url, params=params)
@@ -82,7 +112,7 @@ class Pipedrive:
 
         @staticmethod
         def deal(deal_title):
-            url = f'{BASE_URL}/deals/search?term={deal_title}'
+            url = f'{BASE_URL_V2}/deals/search?term={deal_title}'
             params = {'api_token': PIPEDRIVE_TOKEN, 'exact_match': 1}
 
             response = requests.get(url=url, params=params)
@@ -109,7 +139,7 @@ class Pipedrive:
         def organization(org_name, oid, address_info_array):
             add_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
 
-            url = f'{BASE_URL}/organizations'
+            url = f'{BASE_URL_V2}/organizations'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "name": org_name,
@@ -139,7 +169,7 @@ class Pipedrive:
 
         @staticmethod
         def person(org_id, info):
-            url = f'{BASE_URL}/persons'
+            url = f'{BASE_URL_V2}/persons'
             body = {
                 "name": info[0][1],
                 "owner_id": CREATOR_USER_ID,
@@ -183,7 +213,7 @@ class Pipedrive:
 
         @staticmethod
         def deal(policy_info_arr, p_id, org_id):
-            url = f'{BASE_URL}/deals'
+            url = f'{BASE_URL_V2}/deals'
             params = {'api_token': PIPEDRIVE_TOKEN}
 
             body = {
@@ -202,12 +232,12 @@ class Pipedrive:
                     # RENEWED_OFFER_QUANTITY:         None,
                     # RENEWAL_START_DATE:             None,
                     # SELLER:                         None,
-                    # POLICY_NO:                      policy_info_arr[0][5],
+                    POLICY_NO:                      policy_info_arr[0][5],
                     # RENEWAL_POLICY_QUANTITY:        None,
                     # PRODUCT:                        None,
                     # POLICY_ON_ATTB:                 None,
-                    # OBJECTS:                        policy_info_arr[0][3],
-                    # END_DATE:                       policy_info_arr[0][4],
+                    OBJECTS:                        policy_info_arr[0][3],
+                    END_DATE:                       policy_info_arr[0][4],
                     # INSURER:                        policy_info_arr[0][6],
                     # REGISTRATION_CERTIFICATE_NO:    None,
                     # RENEWAL:                        None,
@@ -228,7 +258,7 @@ class Pipedrive:
     class Update:
         @staticmethod
         def organization(org_id, org_name, oid):
-            url = f'{BASE_URL}/organizations/{org_id}'
+            url = f'{BASE_URL_V2}/organizations/{org_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "name": org_name,
@@ -247,7 +277,7 @@ class Pipedrive:
 
         @staticmethod
         def person(person_id, org_id, info):
-            url = f'{BASE_URL}/persons/{person_id}'
+            url = f'{BASE_URL_V2}/persons/{person_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "name": info[0][1],
@@ -289,7 +319,7 @@ class Pipedrive:
 
         @staticmethod
         def deal(deal_id, policy_info_arr, p_id, org_id):
-            url = f'{BASE_URL}/deals/{deal_id}'
+            url = f'{BASE_URL_V2}/deals/{deal_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "title": policy_info_arr[0][0],
@@ -306,13 +336,13 @@ class Pipedrive:
                     # RENEWED_OFFER_QUANTITY:         None,
                     # RENEWAL_START_DATE:             None,
                     # SELLER:                         None,
-                    # POLICY_NO:                      policy_info_arr[0][5],
+                    POLICY_NO:                      policy_info_arr[0][5],
                     # RENEWAL_POLICY_QUANTITY:        None,
                     # PRODUCT:                        None,
                     # POLICY_ON_ATTB:                 None,
-                    # OBJECTS:                        policy_info_arr[0][3],
-                    # END_DATE:                       policy_info_arr[0][4],
-                    # INSURER:                        policy_info_arr[0][6],
+                    OBJECTS:                        policy_info_arr[0][3],
+                    END_DATE:                       policy_info_arr[0][4],
+                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[0][6]),
                     # REGISTRATION_CERTIFICATE_NO:    None,
                     # RENEWAL:                        None,
                     # RENEWED_POLICY_INSURER:         None,

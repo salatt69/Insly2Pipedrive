@@ -16,7 +16,7 @@ def main():
         customer_oids = json.load(oids)
 
     active_policies = []
-    counter = 1
+    counter = 815
 
     print(f'\n{len(customer_oids) - (counter - 1)} OID\'s ready!\n')
 
@@ -44,7 +44,6 @@ def main():
                     person_id = pd.Add.person(org_id, customer_i)
 
                 for i in range(len(policy_i)):
-                    print(policy_i[i][0])
                     deal_id, deal_name = pd.Search.deal(policy_i[i][0])
 
                     if deal_id and deal_name:

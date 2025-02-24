@@ -1,16 +1,17 @@
+from operator import index
+
 import requests
 from datetime import datetime, timedelta
 import os
 
 retry_buffer = []
+INSLY_TOKEN = os.getenv('BEARER_TOKEN')
 
 
 def get_customer_policy(oid, counter):
-    insly_token = os.getenv('BEARER_TOKEN')
-
     url = 'https://vingo-api.insly.com/api/customer/getpolicy'
     body = {"customer_oid": oid, "get_inactive": 0}
-    headers = {'Authorization': f'Bearer {insly_token}'}
+    headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
 
     response = requests.post(url=url, json=body, headers=headers)
 
@@ -51,12 +52,14 @@ def get_customer_policy(oid, counter):
                     p_description = policy.get('policy_description')
                     p_date_end = datetime.strptime(policy.get('policy_date_end'), "%d.%m.%Y").strftime("%Y-%m-%d")
                     p_number = policy.get('policy_no')
-                    p_insurer = policy.get('policy_insurer')
+                    p_insurer = get_insurer(insurer=policy.get('policy_insurer'))
                     p_installment_status = policy['payment'][0]['policy_installment_status']
-                    policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer, p_installment_status))
+                    policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
+                                        p_installment_status))
 
                 else:
-                    print(f"#{counter} Policy {policy['policy_no']} for customer {oid} is active but does not expire this month.")
+                    print(f"#{counter} Policy {policy['policy_no']}"
+                          f" for customer {oid} is active but does not expire this month.")
         else:
             print(f"#{counter} No policies found for customer {oid}.")
 
@@ -70,12 +73,9 @@ def get_customer_policy(oid, counter):
 
 
 def get_customer_list():
-    insly_token = os.getenv('BEARER_TOKEN')
-
     url = 'https://vingo-api.insly.com/api/customer/getcustomerlist'
-
     headers = {
-        'Authorization': f'Bearer {insly_token}'
+        'Authorization': f'Bearer {INSLY_TOKEN}'
     }
 
     print('Fetching OID\'s...')
@@ -89,4 +89,19 @@ def get_customer_list():
         return customer_oids
     else:
         print(f"'get_customer_list': Request failed with status code {response.status_code}")
+        return None
+
+
+def get_insurer(insurer):
+    url = 'https://vingo-api.insly.com/api/policy/getclassifier'
+    headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
+
+    response = requests.post(url=url, json={}, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+
+        return data['insurer'][insurer]
+    else:
+        print(f"'get_policy_classifiers': Request failed with status code {response.status_code}")
         return None
