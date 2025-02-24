@@ -1,5 +1,3 @@
-from operator import index
-
 import requests
 from datetime import datetime, timedelta
 import os
