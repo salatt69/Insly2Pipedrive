@@ -19,17 +19,16 @@ def get_customer_policy(oid, counter):
         policy_info = []
         address_info = []
         customer_info_added = False
+        current_date = datetime.today()
+        future_date = current_date + timedelta(days=21)
 
         if 'policy' in data:
             for policy in data['policy']:
-                current_date = datetime.today()
                 exp_date = datetime.strptime(policy['policy_date_end'], "%d.%m.%Y")
-                future_date = current_date + timedelta(days=30)
 
                 if current_date <= exp_date <= future_date:
-                    print(f"#{counter} Customer {oid} has an active policy expiring this month.")
+                    print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} ends within 21 days.")
                     if not customer_info_added:
-
                         if 'address' in data:
                             address = data['address'][0]
                             a_value = address['customer_address']
@@ -57,10 +56,9 @@ def get_customer_policy(oid, counter):
                                         p_installment_status, p_type))
 
                 else:
-                    print(f"#{counter} Policy {policy['policy_no']}"
-                          f" for customer {oid} is active but does not expire this month.")
+                    print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} doesn't suit our needs.")
         else:
-            print(f"#{counter} No policies found for customer {oid}.")
+            print(f"#{counter} Customer {oid}: No policies found.")
 
         return customer_info, policy_info, address_info
 
