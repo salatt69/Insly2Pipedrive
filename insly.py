@@ -43,6 +43,15 @@ def get_customer_policy(oid, counter):
                         customer_info.append((oid, c_name, c_email, c_phone, c_type))
                         customer_info_added = True
 
+                    statuses = [installment['policy_installment_status'] for installment in policy['payment']]
+
+                    if all(status == 12 for status in statuses):
+                        p_installment_status = 'won'
+                    elif all(status == 99 for status in statuses):
+                        p_installment_status = 'lost'
+                    else:
+                        p_installment_status = 'open'
+
                     p_title = data.get('customer_name') + " " + policy.get('policy_no')
                     p_currency = policy.get('policy_premium_currency')
                     p_summ = policy.get('policy_payment_sum')
@@ -50,7 +59,6 @@ def get_customer_policy(oid, counter):
                     p_date_end = datetime.strptime(policy.get('policy_date_end'), "%d.%m.%Y").strftime("%Y-%m-%d")
                     p_number = policy.get('policy_no')
                     p_insurer = get_classifier_value(value=policy.get('policy_insurer'), classifier_field_name='insurer')
-                    p_installment_status = policy['payment'][0]['policy_installment_status']
                     p_type = get_classifier_value(value=policy.get('policy_type'), classifier_field_name='product')
                     policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
                                         p_installment_status, p_type))

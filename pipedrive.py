@@ -36,6 +36,8 @@ class Pipedrive:
 
     @staticmethod
     def find_custom_field(custom_field_key, option_label):
+        if not option_label:
+            return
 
         # Find field_id by its key from 'custom_field_ids.json'
         with open('custom_field_ids.json', 'r') as f:
@@ -223,7 +225,7 @@ class Pipedrive:
                 "currency": policy_info_arr[1],
                 "value": policy_info_arr[2],
                 "expected_close_date": policy_info_arr[4],
-                "status": "open",
+                "status": policy_info_arr[7],
                 "visible_to": 3,
                 "custom_fields": {
                     # RENEWED_OFFER_QUANTITY:         None,
@@ -330,6 +332,7 @@ class Pipedrive:
                 "currency": policy_info_arr[1],
                 "value": policy_info_arr[2],
                 "expected_close_date": policy_info_arr[4],
+                "status": policy_info_arr[7],
                 "visible_to": 3,
                 "custom_fields": {
                     # RENEWED_OFFER_QUANTITY:         None,
