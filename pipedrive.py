@@ -168,12 +168,11 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def person(org_id, info):
+        def person(info):
             url = f'{BASE_URL_V2}/persons'
             body = {
                 "name": info[1],
                 "owner_id": CREATOR_USER_ID,
-                "org_id": org_id,
                 "visible_to": 3,
                 "custom_fields": {
                     INSLY_OID: info[0]
@@ -212,15 +211,13 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal(policy_info_arr, p_id, org_id):
+        def deal(policy_info_arr, entity_id, entype):
             url = f'{BASE_URL_V2}/deals'
             params = {'api_token': PIPEDRIVE_TOKEN}
 
             body = {
                 "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
-                "person_id": p_id,
-                "org_id": org_id,
                 "pipeline_id": 1,
                 "stage_id": 1,
                 "currency": policy_info_arr[1],
@@ -245,6 +242,11 @@ class Pipedrive:
                     # STATUS:                         None
                 }
             }
+
+            if entype == 'org':
+                body["org_id"] = entity_id
+            else:
+                body["person_id"] = entity_id
 
             response = requests.post(url=url, params=params, json=body)
 
@@ -276,13 +278,12 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def person(person_id, org_id, info):
+        def person(person_id, info):
             url = f'{BASE_URL_V2}/persons/{person_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "name": info[1],
                 "owner_id": CREATOR_USER_ID,
-                "org_id": org_id,
                 "visible_to": 3,
                 "custom_fields": {
                     INSLY_OID: info[0]
@@ -318,14 +319,12 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal(deal_id, policy_info_arr, p_id, org_id):
+        def deal(deal_id, policy_info_arr, entity_id, entype):
             url = f'{BASE_URL_V2}/deals/{deal_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
-                "person_id": p_id,
-                "org_id": org_id,
                 "pipeline_id": 1,
                 "stage_id": 1,
                 "currency": policy_info_arr[1],
@@ -349,6 +348,11 @@ class Pipedrive:
                     # STATUS:                         None
                 }
             }
+
+            if entype == 'org':
+                body["org_id"] = entity_id
+            else:
+                body["person_id"] = entity_id
 
             response = requests.patch(url=url, params=params, json=body)
 

@@ -34,33 +34,39 @@ def process_customer(pd, oid, counter, active_policies):
 
     active_policies.append(customer_i[0][1])
 
-    org_id, org_name = pd.Search.organization(customer_i[0][1]) or (None, None)
-
-    if org_id is None:
-        org_id = pd.Add.organization(customer_i[0][1], oid, address_i)
-    else:
-        pd.Update.organization(org_id, org_name, oid)
-
     if customer_i[0][4] == 11:  # Company
         print(f"{customer_i[0][0]}: '11' Company")
+
+        org_id, org_name = pd.Search.organization(customer_i[0][1]) or (None, None)
+
+        if org_id is None:
+            org_id = pd.Add.organization(customer_i[0][1], oid, address_i)
+        else:
+            pd.Update.organization(org_id, org_name, oid)
+
+        entity_id = org_id
+        entype = 'org'
+
+    else:
+        print(f"{customer_i[0][0]}: 'Individual'")
 
         person_id, person_name = pd.Search.person(customer_i[0][1]) or (None, None)
 
         if person_id is None:
-            person_id = pd.Add.person(org_id, customer_i[0])
+            person_id = pd.Add.person(customer_i[0])
         else:
-            pd.Update.person(person_id, org_id, customer_i[0])
+            pd.Update.person(person_id, customer_i[0])
 
-        for i in range(len(policy_i)):
-            deal_id, deal_title = pd.Search.deal(policy_i[i][0]) or (None, None)
-            print(policy_i[i])
-            if deal_id is None:
-                deal_id = pd.Add.deal(policy_i[i], person_id, org_id)
-            else:
-                pd.Update.deal(deal_id, policy_i[i], person_id, org_id)
+        entity_id = person_id
+        entype = 'person'
 
-    else:
-        print(f"{customer_i[0][0]}: 'Individual'")
+    for i in range(len(policy_i)):
+        deal_id, deal_title = pd.Search.deal(policy_i[i][0]) or (None, None)
+
+        if deal_id is None:
+            deal_id = pd.Add.deal(policy_i[i], entity_id, entype)
+        else:
+            pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
 
 
 def main():
@@ -72,7 +78,7 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    counter = 1
+    counter = 815
     remaining_oids = customer_oids[counter - 1:]
     print(f"\n{len(remaining_oids)} OIDs ready!\n")
 
