@@ -27,7 +27,7 @@ def save_active_policies(active_policies, file_path='active_policies.json'):
 
 def process_customer(pd, oid, counter, active_policies):
     retry_requests()
-    customer_i, policy_i, address_i = get_customer_policy(oid, counter)
+    customer_i, policy_i, address_i, object_i = get_customer_policy(oid, counter)
 
     if not customer_i:
         return
@@ -68,6 +68,13 @@ def process_customer(pd, oid, counter, active_policies):
         else:
             pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
 
+        note_id = pd.Search.note(deal_id)
+
+        if note_id is None:
+            pd.Add.note(object_i[i], deal_id)
+        else:
+            pd.Update.note(note_id, object_i[i], deal_id)
+
 
 def main():
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
@@ -78,7 +85,8 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    counter = 815
+    counter = 18254
+    # 18254
     remaining_oids = customer_oids[counter - 1:]
     print(f"\n{len(remaining_oids)} OIDs ready!\n")
 
@@ -86,7 +94,7 @@ def main():
 
     for i, oid in enumerate(remaining_oids, start=counter):
         process_customer(pd, oid, i, active_policies)
-        time.sleep(0.7)
+        time.sleep(1)
 
     print(f"\n{len(active_policies)} policies expiring this month!\n")
     save_active_policies(active_policies)

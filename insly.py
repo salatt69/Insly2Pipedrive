@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 import os
+from helper import format_objects_to_html
 
 retry_buffer = []
 INSLY_TOKEN = os.getenv('BEARER_TOKEN')
@@ -18,6 +19,7 @@ def get_customer_policy(oid, counter):
         customer_info = []
         policy_info = []
         address_info = []
+        object_info =[]
         customer_info_added = False
         current_date = datetime.today()
         future_date = current_date + timedelta(days=21)
@@ -63,18 +65,21 @@ def get_customer_policy(oid, counter):
                     policy_info.append((p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
                                         p_installment_status, p_type))
 
+                    object_info.append(get_policy_object(policy.get('policy_oid')))
+
                 else:
                     print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} doesn't suit our needs.")
         else:
             print(f"#{counter} Customer {oid}: No policies found.")
 
-        return customer_info, policy_info, address_info
+        return customer_info, policy_info, address_info, object_info
 
     elif response.status_code == 429:
         retry_buffer.append((oid, counter))
 
-    else:
-        print(f"'get_customer_policy': Request failed with status code {response.status_code}")
+    print(f"'get_customer_policy': Request failed with status code {response.status_code}")
+    return [], [], [], []
+
 
 
 def get_customer_list():
@@ -110,3 +115,21 @@ def get_classifier_value(value, classifier_field_name: str):
     else:
         print(f"'get_policy_classifiers': Request failed with status code {response.status_code}")
         return None
+
+
+def get_policy_object(policy_oid):
+    url = 'https://vingo-api.insly.com/api/policy/getpolicy'
+    body = {"policy_oid": policy_oid, "return_objects": "1"}
+    headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
+
+    response = requests.post(url=url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        data = response.json()
+        if "objects" in data and data["objects"]:
+            return format_objects_to_html(data["objects"])
+        else:
+            return "<p>No objects found for this policy.</p>"
+    else:
+        print(f"'get_policy_object': '{policy_oid}' Request failed with status code {response.status_code}")
+        print(response.json())

@@ -136,6 +136,23 @@ class Pipedrive:
                 print(f"'search_deal': Request failed with status code {response.status_code}")
                 print(response.json())
 
+        @staticmethod
+        def note(deal_id):
+            url = f'{BASE_URL_V1}/notes?deal_id={deal_id}'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+
+            response = requests.get(url=url, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+                if data['data'] is not None:
+                    return data["data"][0]["id"]
+
+                return None
+            else:
+                print(f"'search_note': Request failed with status code {response.status_code}")
+                print(response.json())
+
     class Add:
         @staticmethod
         def organization(org_name, oid, address_info_array):
@@ -216,12 +233,9 @@ class Pipedrive:
         def deal(policy_info_arr, entity_id, entype):
             url = f'{BASE_URL_V2}/deals'
             params = {'api_token': PIPEDRIVE_TOKEN}
-
             body = {
                 "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
-                "pipeline_id": 1,
-                "stage_id": 1,
                 "currency": policy_info_arr[1],
                 "value": policy_info_arr[2],
                 "expected_close_date": policy_info_arr[4],
@@ -231,19 +245,33 @@ class Pipedrive:
                     # RENEWED_OFFER_QUANTITY:         None,
                     # RENEWAL_START_DATE:             None,
                     # SELLER:                         None,
-                    POLICY_NO:                      policy_info_arr[5],
+                    POLICY_NO: policy_info_arr[5],
                     # RENEWAL_POLICY_QUANTITY:        None,
-                    PRODUCT:                        Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
+                    PRODUCT: Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
                     # POLICY_ON_ATTB:                 None,
-                    OBJECTS:                        policy_info_arr[3],
-                    END_DATE:                       policy_info_arr[4],
-                    INSURER:                        Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
+                    OBJECTS: policy_info_arr[3],
+                    END_DATE: policy_info_arr[4],
+                    INSURER: Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
                     # REGISTRATION_CERTIFICATE_NO:    None,
                     # RENEWAL:                        None,
                     # RENEWED_POLICY_INSURER:         None,
                     # STATUS:                         None
                 }
             }
+
+            if policy_info_arr[7] == 'won':
+                body['won_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")
+                                    .replace(hour=9, minute=0,second=0).strftime('%Y-%m-%dT%H:%M:%SZ'))
+                body['stage_id'] = 5
+
+            # elif policy_info_arr[7] == 'lost':
+            #     body['lost_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")
+            #                          .replace(hour=9, minute=0, second=0).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            #     body['stage_id'] = 1
+
+            else:
+                body['won_time'] = ''
+                body['lost_time'] = ''
 
             if entype == 'org':
                 body["org_id"] = entity_id
@@ -257,6 +285,25 @@ class Pipedrive:
                 return response.json()['data']['id']
             else:
                 print(f"'add_deal': Request failed with status code {response.status_code}")
+                print(response.json())
+
+        @staticmethod
+        def note(content, deal_id):
+            url = f'{BASE_URL_V1}/notes'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+            body = {
+                "content": content,
+                "deal_id": deal_id,
+                "user_id": CREATOR_USER_ID
+            }
+
+            response = requests.post(url=url, params=params, json=body)
+
+            if response.status_code == 200 or response.status_code == 201:
+                print(f'{response.json()['data']['id']}: Note added!')
+                # return response.json()['data']['id']
+            else:
+                print(f"'add_note': Request failed with status code {response.status_code}")
                 print(response.json())
 
     class Update:
@@ -327,8 +374,6 @@ class Pipedrive:
             body = {
                 "title": policy_info_arr[0],
                 "owner_id": CREATOR_USER_ID,
-                "pipeline_id": 1,
-                "stage_id": 1,
                 "currency": policy_info_arr[1],
                 "value": policy_info_arr[2],
                 "expected_close_date": policy_info_arr[4],
@@ -352,6 +397,16 @@ class Pipedrive:
                 }
             }
 
+            if policy_info_arr[7] == 'won':
+                body['won_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")
+                                    .replace(hour=9, minute=0, second=0).strftime('%Y-%m-%dT%H:%M:%SZ'))
+                body['stage_id'] = 5
+
+            # elif policy_info_arr[7] == 'lost':
+            #     body['lost_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")
+            #                          .replace(hour=9, minute=0, second=0).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            #     body['stage_id'] = 1
+
             if entype == 'org':
                 body["org_id"] = entity_id
             else:
@@ -363,4 +418,22 @@ class Pipedrive:
                 print(f'{deal_id}: Deal updated!')
             else:
                 print(f"'update_deal': '{deal_id}' Request failed with status code {response.status_code}")
+                print(response.json())
+
+        @staticmethod
+        def note(note_id, content, deal_id):
+            url = f'{BASE_URL_V1}/notes/{note_id}'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+            body = {
+                "content": content,
+                "deal_id": deal_id,
+                "user_id": CREATOR_USER_ID
+            }
+
+            response = requests.put(url=url, params=params, json=body)
+
+            if response.status_code == 200:
+                print(f'{response.json()['data']['id']}: Note updated!')
+            else:
+                print(f"'update_note': Request failed with status code {response.status_code}")
                 print(response.json())
