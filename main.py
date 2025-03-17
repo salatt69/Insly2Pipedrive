@@ -14,20 +14,20 @@ def process_customer(pd, oid, counter):
         return
 
     if customer_i[0][4] == 11:  # Company
-        print(f"{customer_i[0][0]}: '11' Company")
+        print(f"\t{customer_i[0][0]}: Company")
 
         org_id, org_name = pd.Search.organization(customer_i[0][1]) or (None, None)
 
         if org_id is None:
-            org_id = pd.Add.organization(customer_i[0][1], oid, address_i)
+            org_id = pd.Add.organization(customer_i[0], address_i[0])
         else:
-            pd.Update.organization(org_id, org_name, oid)
+            pd.Update.organization(org_id, org_name, customer_i[0])
 
         entity_id = org_id
         entype = 'org'
 
     else:
-        print(f"{customer_i[0][0]}: 'Individual'")
+        print(f"\t{customer_i[0][0]}: Individual")
 
         person_id, person_name = pd.Search.person(customer_i[0][1]) or (None, None)
 
@@ -43,16 +43,16 @@ def process_customer(pd, oid, counter):
         deal_id, deal_title = pd.Search.deal(policy_i[i][0]) or (None, None)
 
         if deal_id is None:
-            deal_id = pd.Add.deal(policy_i[i], entity_id, entype)
+            deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
         else:
-            pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
+            pd.Update.deal(deal_id, policy_i[i], entity_id, entype, customer_i[0][5])
 
         note_id = pd.Search.note(deal_id)
 
         if note_id is None:
-            pd.Add.note(object_i[i], deal_id)
+            pd.Add.note(object_i[i], deal_id, customer_i[0][5])
         else:
-            pd.Update.note(note_id, object_i[i], deal_id)
+            pd.Update.note(note_id, object_i[i], deal_id, customer_i[0][5])
 
 
 def main():
@@ -65,7 +65,7 @@ def main():
         return
 
     # 18254
-    counter = 1
+    counter = 16316
 
     remaining_oids = customer_oids[counter - 1:]
     print(f"\n{len(remaining_oids)} OIDs ready!\n")

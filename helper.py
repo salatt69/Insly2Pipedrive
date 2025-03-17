@@ -29,16 +29,23 @@ def format_objects_to_html(objects):
 
     for obj in objects:
         html_content += "<li>"
-        html_content += f"<strong>Vehicle Type:</strong> {escape(obj.get('vehicle_type', 'N/A'))}<br>"
-        html_content += f"<strong>License Plate:</strong> {escape(obj.get('vehicle_licenseplate', 'N/A'))}<br>"
-        html_content += f"<strong>Make:</strong> {escape(obj.get('vehicle_make', 'N/A'))}<br>"
-        html_content += f"<strong>Model:</strong> {escape(obj.get('vehicle_model', 'N/A'))}<br>"
-        html_content += f"<strong>VIN:</strong> {escape(obj.get('vehicle_vincode', 'N/A'))}<br>"
-        html_content += f"<strong>Year:</strong> {escape(obj.get('vehicle_year', 'N/A'))}<br>"
-        html_content += f"<strong>Power:</strong> {escape(obj.get('vehicle_power', 'N/A'))} HP<br>"
-        html_content += f"<strong>Gross Weight:</strong> {escape(obj.get('vehicle_grossweight', 'N/A'))} kg<br>"
-        html_content += f"<strong>Owner:</strong> {escape(obj.get('vehicle_owner_name', 'N/A'))}<br>"
+        html_content += f"<strong>Vehicle Type:</strong> {escape(obj.get('vehicle_type') or 'N/A')}<br>"
+        html_content += f"<strong>License Plate:</strong> {escape(obj.get('vehicle_licenseplate') or 'N/A')}<br>"
+        html_content += f"<strong>Make:</strong> {escape(obj.get('vehicle_make') or 'N/A')}<br>"
+        html_content += f"<strong>Model:</strong> {escape(obj.get('vehicle_model') or 'N/A')}<br>"
+        html_content += f"<strong>VIN:</strong> {escape(obj.get('vehicle_vincode') or 'N/A')}<br>"
+        html_content += f"<strong>Year:</strong> {escape(obj.get('vehicle_year') or 'N/A')}<br>"
+        html_content += f"<strong>Power:</strong> {escape(obj.get('vehicle_power') or 'N/A')} HP<br>"
+        html_content += f"<strong>Gross Weight:</strong> {escape(obj.get('vehicle_grossweight') or 'N/A')} kg<br>"
+        html_content += f"<strong>Owner:</strong> {escape(obj.get('vehicle_owner_name') or 'N/A')}<br>"
         html_content += "</li><br>"
 
     html_content += "</ul>"
     return html_content
+
+
+def truncate_utf8(value, byte_limit=255):
+    if not value:
+        return ""
+    encoded_value = value.encode("utf-8")[:byte_limit]  # Truncate by bytes
+    return encoded_value.decode("utf-8", errors="ignore")  # Decode safely
