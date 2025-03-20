@@ -13,15 +13,15 @@ def process_customer(pd, oid, counter):
     if not customer_i:
         return
 
-    if customer_i[0][4] == 11:  # Company
+    if customer_i[0][4] == 11:
         print(f"\t{customer_i[0][0]}: Company")
 
-        org_id, org_name = pd.Search.organization(customer_i[0][1]) or (None, None)
+        org_id, org_name = pd.Search.organization(customer_i[0][0]) or (None, None)
 
         if org_id is None:
             org_id = pd.Add.organization(customer_i[0], address_i[0])
         else:
-            pd.Update.organization(org_id, org_name, customer_i[0])
+            pd.Update.organization(org_id, customer_i[0], address_i[0])
 
         entity_id = org_id
         entype = 'org'
@@ -29,7 +29,7 @@ def process_customer(pd, oid, counter):
     else:
         print(f"\t{customer_i[0][0]}: Individual")
 
-        person_id, person_name = pd.Search.person(customer_i[0][1]) or (None, None)
+        person_id, person_name = pd.Search.person(customer_i[0][0]) or (None, None)
 
         if person_id is None:
             person_id = pd.Add.person(customer_i[0])
@@ -40,7 +40,7 @@ def process_customer(pd, oid, counter):
         entype = 'person'
 
     for i in range(len(policy_i)):
-        deal_id, deal_title = pd.Search.deal(policy_i[i][0]) or (None, None)
+        deal_id, deal_title = pd.Search.deal(policy_i[i][10]) or (None, None)
 
         if deal_id is None:
             deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
@@ -64,8 +64,7 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    # 18254
-    counter = 16316
+    counter = 1
 
     remaining_oids = customer_oids[counter - 1:]
     print(f"\n{len(remaining_oids)} OIDs ready!\n")

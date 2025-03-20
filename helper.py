@@ -17,10 +17,11 @@ def is_email_valid(email):
     return bool(re.match(email_regex, email))
 
 
-def is_phone_valid(phone):
+def extract_valid_phone(phone):
     import re
-    phone_regex = r"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"
-    return bool(re.match(phone_regex, phone))
+    phone_regex = r"\b\d{7,15}\b"  # Match numbers between 7 and 15 digits
+    match = re.search(phone_regex, phone)  # Find first number in string
+    return match.group(0) if match else None  # Return only the number
 
 
 def format_objects_to_html(objects):
