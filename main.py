@@ -79,11 +79,11 @@ def main():
 
     start_from = 1
 
-    customer_oids = customer_oids[start_from:]
+    remaining_oids = customer_oids[start_from - 1:]
 
-    print(f"\n{len(customer_oids)} OIDs ready!\n")
+    print(f"\n{len(remaining_oids)} OIDs ready!\n")
 
-    for i, oid in enumerate(customer_oids, start=1):
+    for i, oid in enumerate(remaining_oids, start=start_from):
         process_customer(pd, oid, i)
         time.sleep(1)
 
