@@ -1,5 +1,7 @@
 import time
 import os
+import http.client
+import traceback
 
 from pipedrive import Pipedrive
 from insly import get_customer_policy, get_customer_list
@@ -8,51 +10,62 @@ from helper import retry_requests
 
 def process_customer(pd, oid, counter):
     retry_requests()
-    customer_i, policy_i, address_i, object_i = get_customer_policy(oid, counter)
+    retry_delay = 5
 
-    if not customer_i:
-        return
+    while True:
+        try:
+            customer_i, policy_i, address_i, object_i = get_customer_policy(oid, counter)
 
-    if customer_i[0][4] == 11:
-        print(f"\t{customer_i[0][0]}: Company")
+            if not customer_i:
+                return
 
-        org_id, org_name = pd.Search.organization(customer_i[0][0]) or (None, None)
+            if customer_i[0][4] == 11:
+                print(f"\t{customer_i[0][0]}: Company")
+                org_id, org_name = pd.Search.organization(customer_i[0][0]) or (None, None)
 
-        if org_id is None:
-            org_id = pd.Add.organization(customer_i[0], address_i[0])
-        else:
-            pd.Update.organization(org_id, customer_i[0], address_i[0])
+                if org_id is None:
+                    org_id = pd.Add.organization(customer_i[0], address_i[0])
+                else:
+                    pd.Update.organization(org_id, customer_i[0], address_i[0])
 
-        entity_id = org_id
-        entype = 'org'
+                entity_id, entype = org_id, 'org'
 
-    else:
-        print(f"\t{customer_i[0][0]}: Individual")
+            else:
+                print(f"\t{customer_i[0][0]}: Individual")
+                person_id, person_name = pd.Search.person(customer_i[0][0]) or (None, None)
 
-        person_id, person_name = pd.Search.person(customer_i[0][0]) or (None, None)
+                if person_id is None:
+                    person_id = pd.Add.person(customer_i[0])
+                else:
+                    pd.Update.person(person_id, customer_i[0])
 
-        if person_id is None:
-            person_id = pd.Add.person(customer_i[0])
-        else:
-            pd.Update.person(person_id, customer_i[0])
+                entity_id, entype = person_id, 'person'
 
-        entity_id = person_id
-        entype = 'person'
+            for i in range(len(policy_i)):
+                deal_id, deal_title = pd.Search.deal(policy_i[i][10]) or (None, None)
 
-    for i in range(len(policy_i)):
-        deal_id, deal_title = pd.Search.deal(policy_i[i][10]) or (None, None)
+                if deal_id is None:
+                    deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
+                else:
+                    pd.Update.deal(deal_id, policy_i[i], entity_id, entype, customer_i[0][5])
 
-        if deal_id is None:
-            deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
-        else:
-            pd.Update.deal(deal_id, policy_i[i], entity_id, entype, customer_i[0][5])
+                note_id = pd.Search.note(deal_id)
 
-        note_id = pd.Search.note(deal_id)
+                if note_id is None:
+                    pd.Add.note(object_i[i], deal_id, customer_i[0][5])
+                else:
+                    pd.Update.note(note_id, object_i[i], deal_id, customer_i[0][5])
+            return
 
-        if note_id is None:
-            pd.Add.note(object_i[i], deal_id, customer_i[0][5])
-        else:
-            pd.Update.note(note_id, object_i[i], deal_id, customer_i[0][5])
+        except http.client.RemoteDisconnected as e:
+            print(f"\nRemoteDisconnected error on customer {oid}: {e}")
+        except Exception as e:
+            print(f"\nUnexpected error processing customer {oid}: {e}")
+            print(traceback.format_exc())
+
+        print(f"\nRetrying customer {oid} in {retry_delay} seconds...")
+        time.sleep(retry_delay)
+        retry_delay = min(retry_delay * 2, 60)
 
 
 def main():
@@ -64,15 +77,15 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    counter = 1
+    start_from = 1
 
-    remaining_oids = customer_oids[counter - 1:]
-    print(f"\n{len(remaining_oids)} OIDs ready!\n")
+    customer_oids = customer_oids[start_from:]
 
-    for i, oid in enumerate(remaining_oids, start=counter):
+    print(f"\n{len(customer_oids)} OIDs ready!\n")
+
+    for i, oid in enumerate(customer_oids, start=1):
         process_customer(pd, oid, i)
         time.sleep(1)
-
 
 if __name__ == '__main__':
     main()
