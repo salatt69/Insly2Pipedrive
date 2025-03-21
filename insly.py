@@ -122,13 +122,20 @@ def get_customer_policy(oid, counter):
                     fetched_p_info = list(fetched_p_info)
 
                     if exp_date < current_date:
-                        statuses = [installment['policy_installment_status'] for installment in policy['payment']]
-                        if all(status == 12 for status in statuses):
-                            fetched_p_info[7] = 'won'
-                        elif all(status == 99 for status in statuses):
-                            fetched_p_info[7] = 'lost'
+                        if policy['payment']:
+                            last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
+
+                            if last_installment['policy_installment_num'] == policy['policy_installments']:
+                                if last_installment['policy_installment_status'] == 12:
+                                    fetched_p_info[7] = 'won'
+                                elif last_installment['policy_installment_status'] == 99:
+                                    fetched_p_info[7] = 'lost'
+                                else:
+                                    fetched_p_info[7] = 'open'
+                            else:
+                                fetched_p_info[7] = 'open'
                         else:
-                            fetched_p_info[7] = 'open'
+                            fetched_p_info[7] = 'lost'
                     else:
                         fetched_p_info[7] = 'open'
 
@@ -358,7 +365,7 @@ def fetch_policy_data(data, policy):
     p_summ = policy.get('policy_payment_sum')
     p_description = policy.get('policy_description')
     p_date_end = datetime.strptime(policy.get('policy_date_end'), "%d.%m.%Y").strftime("%Y-%m-%d")
-    p_number = policy.get('policy_no')
+    p_number = policy.get('policy_no') or 'Policy number is missing.'
     p_installment_status = ''  # It will be determined in the 'get_customer_policy'
     p_insurer = get_classifier_value(value=policy.get('policy_insurer'), classifier_field_name='insurer')
     p_type = get_classifier_value(value=policy.get('policy_type'), classifier_field_name='product')
