@@ -9,6 +9,46 @@ from helper import retry_requests
 
 
 def process_customer(pd, oid, counter):
+    """
+    Processes a customer's data by retrieving policies, creating or updating records in Pipedrive,
+    and handling associated notes.
+
+    Args:
+        pd (Pipedrive): An instance of the Pipedrive API client.
+        oid (int): The unique identifier of the customer.
+        counter (int): A counter used for tracking the processing sequence.
+
+    .. rubric:: Behavior
+    - Calls `get_customer_policy(oid, counter)` to retrieve the customer's policies, address,
+      and related objects from the Insly API.
+    - If no customer data is found, the function terminates.
+    - Determines if the customer is a company or an individual.
+        If a company:
+            - Searches for an existing organization in Pipedrive.
+            - If found, updates it; otherwise, creates a new organization.
+        If an individual:
+            - Searches for an existing person in Pipedrive.
+            - If found, updates it; otherwise, creates a new person.
+    - Associates the retrieved policies with the identified organization/person:
+        Searches for an existing deal in Pipedrive.\n
+        If found, updates the deal; otherwise, creates a new deal.
+    - Manages policy-related notes:
+        Searches for an existing note linked to the deal.\n
+        If found, updates it; otherwise, creates a new note.
+    - Implements a retry mechanism for handling transient errors:
+        Catches `http.client.RemoteDisconnected` errors and other unexpected exceptions.
+        Uses an exponential backoff strategy, retrying the operation with increasing delays up to 60 seconds.
+
+    Notes:
+        - The function ensures that all customer policies and related objects are properly reflected in Pipedrive.
+        - The retry mechanism prevents failures due to temporary API issues.
+        - Customers without policies are skipped.
+        - Pipedrive records (organizations, persons, deals, and notes) are either updated or created as needed.
+        - Only policies that are already closed or ending within 21 days are processed.
+
+    Returns:
+        None: The function processes and updates records but does not return a value.
+    """
     retry_requests()
     retry_delay = 5
 
@@ -69,6 +109,28 @@ def process_customer(pd, oid, counter):
 
 
 def main():
+    """
+    Main function to retrieve customer data from Insly and process it in Pipedrive.
+
+    .. rubric:: Behavior
+    - Initializes a `Pipedrive` instance with the retrieved token from environment variables.
+    - Calls `get_customer_list()` to fetch a list of customer OIDs from Insly.
+    - If no customer OIDs are found, prints a message and exits.
+    - Defines `start_from` to specify where to begin processing customers.
+    - Extracts the remaining OIDs from `customer_oids` based on `start_from`.
+    - Iterates through each remaining customer OID:
+        Calls `process_customer(pd, oid, i)` to process the customer and their policies.\n
+        Introduces a 1-second delay between processing each customer to avoid rate limits.
+
+    Notes:
+        - The script processes customers sequentially, starting from `start_from`.
+        - If interrupted or restarted, `start_from` can be adjusted to resume from a specific OID.
+        - The function ensures that all customers in the retrieved list are processed.
+        - A delay is added to prevent excessive API requests that might trigger rate limiting.
+
+    Returns:
+        None: The function executes the pipeline but does not return a value.
+    """
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
     pd = Pipedrive(pd_token)
 
