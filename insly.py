@@ -103,7 +103,13 @@ def get_customer_policy(oid, counter):
 
             for policy in data['policy']:
                 time.sleep(0.5)
-                exp_date = datetime.strptime(policy['policy_date_end'], "%d.%m.%Y")
+
+                p_date_end_raw = policy.get('policy_date_end', '')
+                try:
+                    exp_date = datetime.strptime(p_date_end_raw, "%d.%m.%Y")
+                except ValueError:
+                    print(f"#{counter} Skipping policy with invalid date '{p_date_end_raw}' for customer {oid}")
+                    continue
 
                 if exp_date < current_date or current_date <= exp_date < future_date:
                     if exp_date < current_date:

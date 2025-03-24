@@ -51,8 +51,10 @@ def process_customer(pd, oid, counter):
     """
     retry_requests()
     retry_delay = 5
+    retry_attempts = 0
+    max_retry_attempts = 2
 
-    while True:
+    while max_retry_attempts != retry_attempts:
         try:
             customer_i, policy_i, address_i, object_i = get_customer_policy(oid, counter)
 
@@ -99,6 +101,16 @@ def process_customer(pd, oid, counter):
 
         except http.client.RemoteDisconnected as e:
             print(f"\nRemoteDisconnected error on customer {oid}: {e}")
+
+        except ValueError as e:
+            print(f"ValueError no customer {oid}: {e}")
+            retry_attempts += 1
+            print(f"\nAttempts left: {max_retry_attempts - retry_attempts}")
+
+            if max_retry_attempts - retry_attempts == 0:
+                print(f"Returning to whatever it is...\n")
+                return
+
         except Exception as e:
             print(f"\nUnexpected error processing customer {oid}: {e}")
             print(traceback.format_exc())
