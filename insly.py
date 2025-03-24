@@ -91,6 +91,7 @@ def get_customer_policy(oid, counter):
             address_info = []
             object_info = []
             customer_info_added = False
+            latest_date = datetime(2024, 1, 1)
             current_date = datetime.today()
             future_date = current_date + timedelta(days=21)
 
@@ -102,8 +103,6 @@ def get_customer_policy(oid, counter):
                 return [], [], [], []
 
             for policy in data['policy']:
-                time.sleep(0.5)
-
                 p_date_end_raw = policy.get('policy_date_end', '')
                 try:
                     exp_date = datetime.strptime(p_date_end_raw, "%d.%m.%Y")
@@ -111,9 +110,9 @@ def get_customer_policy(oid, counter):
                     print(f"#{counter} Skipping policy with invalid date '{p_date_end_raw}' for customer {oid}")
                     continue
 
-                if exp_date < current_date or current_date <= exp_date < future_date:
-                    if exp_date < current_date:
-                        print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} closed.")
+                if latest_date <= exp_date < current_date or current_date <= exp_date < future_date:
+                    if latest_date <= exp_date < current_date:
+                        print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} closed after {latest_date}.")
                     else:
                         print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} ends within 21 days.")
 
@@ -127,27 +126,39 @@ def get_customer_policy(oid, counter):
 
                     fetched_p_info = list(fetched_p_info)
 
-                    if exp_date < current_date:
-                        if policy['payment']:
+                    if latest_date <= exp_date < current_date:
+                        fetched_p_info[7] = 'lost'  # Default
+
+                        if policy.get('payment'):
                             last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
 
                             if last_installment['policy_installment_num'] == policy['policy_installments']:
-                                if last_installment['policy_installment_status'] == 12:
+                                status = last_installment['policy_installment_status']
+
+                                if status == 12:  # Fully paid
                                     fetched_p_info[7] = 'won'
-                                elif last_installment['policy_installment_status'] == 99:
+
+                    elif current_date <= exp_date < future_date:
+                        fetched_p_info[7] = 'open'  # Default
+
+                        if policy.get('payment'):
+                            last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
+
+                            if last_installment['policy_installment_num'] == policy['policy_installments']:
+                                status = last_installment['policy_installment_status']
+
+                                if status == 12:  # Fully paid
+                                    fetched_p_info[7] = 'won'
+                                elif status == 99:  # Cancelled
                                     fetched_p_info[7] = 'lost'
-                                else:
+                                else:               # Added, invoice created, partially paid
                                     fetched_p_info[7] = 'open'
-                            else:
-                                fetched_p_info[7] = 'open'
-                        else:
-                            fetched_p_info[7] = 'lost'
-                    else:
-                        fetched_p_info[7] = 'open'
 
                     fetched_p_info = tuple(fetched_p_info)
                     policy_info.append(fetched_p_info)
                     object_info.append(fetched_o_info)
+                else:
+                    print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} out of range.")
 
             return customer_info, policy_info, address_info, object_info
 
