@@ -70,9 +70,9 @@ def extract_valid_phone(phone):
         - Does not validate international dialing codes or separators.
     """
     import re
-    phone_regex = r"\b\d{7,15}\b"  # Match numbers between 7 and 15 digits
+    phone_regex = r"\+?\d{1,4}([- ]?\d{3,4}){1,3}\b"  # Match numbers between 7 and 15 digits with optional +
     match = re.search(phone_regex, phone)  # Find first number in string
-    return match.group(0) if match else None  # Return only the number
+    return match.group(0).lstrip("+") if match else None  # Remove '+' before returning
 
 
 def format_objects_to_html(objects):
