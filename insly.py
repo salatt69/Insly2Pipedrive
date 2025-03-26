@@ -76,7 +76,7 @@ def get_customer_policy(oid, counter):
     - Returns structured lists of customer, policy, address, and policy object details.
     """
     url = 'https://vingo-api.insly.com/api/customer/getpolicy'
-    body = {"customer_oid": oid, "get_inactive": 1}
+    body = {"customer_oid": oid, "get_inactive": 0}
     headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
 
     for attempt in range(MAX_RETRIES):
@@ -113,7 +113,7 @@ def get_customer_policy(oid, counter):
                 if latest_date <= exp_date < current_date or current_date <= exp_date < future_date:
                     if latest_date <= exp_date < current_date:
                         print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} closed after {latest_date}.")
-                        continue
+                        # continue
                     else:
                         print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} ends within 21 days.")
 
@@ -149,7 +149,7 @@ def get_customer_policy(oid, counter):
                                 status = last_installment['policy_installment_status']
 
                                 if status == 12:  # Fully paid
-                                    fetched_p_info[7] = 'won'
+                                    fetched_p_info[7] = 'open'
                                 elif status == 99:  # Cancelled
                                     fetched_p_info[7] = 'lost'
                                 else:               # Added, invoice created, partially paid
@@ -157,8 +157,8 @@ def get_customer_policy(oid, counter):
 
                     fetched_p_info = tuple(fetched_p_info)
 
-                    if fetched_p_info[7] != 'open':
-                        return [], [], [], []
+                    # if fetched_p_info[7] != 'open':
+                    #     return [], [], [], []
 
                     policy_info.append(fetched_p_info)
                     object_info.append(fetched_o_info)
