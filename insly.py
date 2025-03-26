@@ -113,6 +113,7 @@ def get_customer_policy(oid, counter):
                 if latest_date <= exp_date < current_date or current_date <= exp_date < future_date:
                     if latest_date <= exp_date < current_date:
                         print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} closed after {latest_date}.")
+                        continue
                     else:
                         print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} ends within 21 days.")
 
@@ -155,6 +156,10 @@ def get_customer_policy(oid, counter):
                                     fetched_p_info[7] = 'open'
 
                     fetched_p_info = tuple(fetched_p_info)
+
+                    if fetched_p_info[7] != 'open':
+                        return [], [], [], []
+
                     policy_info.append(fetched_p_info)
                     object_info.append(fetched_o_info)
                 else:
