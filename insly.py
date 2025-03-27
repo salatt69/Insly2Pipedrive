@@ -92,7 +92,7 @@ def get_customer_policy(oid, counter):
             object_info = []
             customer_info_added = False
             latest_date = datetime(2024, 1, 1)
-            current_date = datetime.today()
+            current_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
             future_date = current_date + timedelta(days=21)
 
             if BROKER_JSON is None:
@@ -112,10 +112,13 @@ def get_customer_policy(oid, counter):
 
                 if latest_date <= exp_date < current_date or current_date <= exp_date < future_date:
                     if latest_date <= exp_date < current_date:
-                        print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} closed after {latest_date}.")
+                        print(f"#{counter} Customer {oid}:"
+                              f" Policy {policy['policy_no']} closed after {latest_date}.")
                         # continue
-                    else:
-                        print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} ends within 21 days.")
+
+                    elif current_date <= exp_date < future_date:
+                        print(f"#{counter} Customer {oid}:"
+                              f" Policy {policy['policy_no']} ends within 21 days.")
 
                     if not customer_info_added:
                         fetched_a_info, fetched_c_info = fetch_customer_data(data)
