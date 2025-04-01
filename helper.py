@@ -1,6 +1,3 @@
-from pandas.plotting import plot_params
-
-
 def retry_requests(wait_time=40):
     """
     Retries failed requests due to rate limits by processing entries in `retry_buffer`.
