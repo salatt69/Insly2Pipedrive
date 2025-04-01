@@ -5,7 +5,7 @@ import traceback
 
 from pipedrive import Pipedrive
 from insly import get_customer_policy, get_customer_list
-from helper import retry_requests
+from helper import retry_requests, fetch_table, fetch_non_api_data
 
 
 def process_customer(pd, oid, counter):
@@ -160,6 +160,25 @@ def main():
     for i, oid in enumerate(remaining_oids, start=start_from):
         process_customer(pd, oid, i)
         time.sleep(1)
+
+    ### SECOND PART ###
+    print(f"\nProceeding to Non-API data fetch...\n")
+    data = fetch_table("https://docs.google.com/spreadsheets/d/1Wglpdxroz3K82al0eoGNPEWCoqY2FNi6OtOr4e6ZQZE/export?format=csv")
+
+    policy_numbers = data["Polise"].tolist()
+
+    for i in range(len(policy_numbers)):
+        deal_id, deal_title = pd.Search.deal(policy_numbers[i]) or (None, None)
+
+        if deal_id is None:
+            print(f"#{i + 1} P_NO: {policy_numbers[i]} => Deal doesn't exist yet. ")
+        else:
+            print(f"#{i + 1} P_NO: {policy_numbers[i]}")
+
+            info = fetch_non_api_data(data, policy_numbers[i])
+            pd.Update.deal_custom_fields(deal_id, info)
+        time.sleep(0.2)
+
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,6 @@
+from pandas.plotting import plot_params
+
+
 def retry_requests(wait_time=40):
     """
     Retries failed requests due to rate limits by processing entries in `retry_buffer`.
@@ -141,3 +144,163 @@ def truncate_utf8(value, byte_limit=255):
         return ""
     encoded_value = value.encode("utf-8")[:byte_limit]  # Truncate by bytes
     return encoded_value.decode("utf-8", errors="ignore")  # Decode safely
+
+
+def fetch_table(url):
+    """
+    Reads a CSV file from a given URL and returns a pandas DataFrame.
+
+    Args:
+        url (str): The URL of the CSV file.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the CSV data with adjusted row indexing.
+
+    .. rubric:: Behavior
+    - Reads the CSV file from the provided URL.
+    - Skips the first two rows (`skiprows=2`) to exclude headers or metadata.
+    - Uses the third row as the column headers (`header=1`).
+
+    Note:
+        - Assumes the CSV file contains at least three rows, where the third row holds column names.
+    """
+    import pandas
+
+    return pandas.read_csv(url, skiprows=2, header=1)
+
+
+def fetch_non_api_data(data, policy_number):
+    """
+    Extracts policy-related information from a given dataset based on a policy number.
+
+    Args:
+        data (pandas.DataFrame): The dataset containing policy details.
+        policy_number (any): The policy number used to locate the relevant row.
+
+    Returns:
+        tuple: A tuple containing extracted values.
+
+    .. rubric:: Behavior
+    - Searches for the given `policy_number` in the "Polise" column.
+    - Retrieves corresponding values from multiple columns related to the policy.
+    - Converts status and renewal labels into numeric codes.
+    - Formats the renewal start date into 'YYYY-MM-DD'.
+    - Returns `None` if a value is missing or invalid.
+
+    Note:
+        - Uses `get_value_in_same_row()` to extract data.
+        - Uses `format_date()` to standardize date formatting.
+    """
+    policy_on_attb = get_value_in_same_row(data,
+                                           policy_number,
+                                           "Polise",
+                                           "Atb. par polisi")
+    renewed_offer_quantity = get_value_in_same_row(data,
+                                                   policy_number,
+                                                   "Polise",
+                                                   "Atjaunotais piedāvājums: numurs")
+    renewal_policy_quantity = get_value_in_same_row(data,
+                                                    policy_number,
+                                                    "Polise",
+                                                    "Atjaunotā polise: numurs")
+    renewed_policy_insurer = get_value_in_same_row(data,
+                                                   policy_number,
+                                                   "Polise",
+                                                   "Atjaunotā polise: apdrošinātājs")
+    renewed_policy_insurer = None
+
+    status_label = get_value_in_same_row(data,
+                                         policy_number,
+                                         "Polise",
+                                         "Statuss")
+    if status_label == "nav spēkā":
+        status = 40
+    elif status_label == "spēkā":
+        status = 41
+    else:
+        status = None
+
+    renewal_label = get_value_in_same_row(data,
+                                          policy_number,
+                                          "Polise",
+                                          "Atjaunojums")
+    if renewal_label == "atjaunots":
+        renewal = 42
+    elif renewal_label == "atjaunošana nav sākta":
+        renewal = 43
+    else:
+        renewal = None
+
+    renewal_start_date_str = get_value_in_same_row(data,
+                                                   policy_number,
+                                                   "Polise",
+                                                   "Renewal start date")
+    if renewal_start_date_str is not None:
+        renewal_start_date = format_date(renewal_start_date_str)
+    else:
+        renewal_start_date = None
+
+    registration_certificate_no = get_value_in_same_row(data,
+                                                        policy_number,
+                                                        "Polise",
+                                                        "Reģ. apliecības nr.")
+
+    info = (policy_on_attb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
+            status, renewal, renewal_start_date, registration_certificate_no)
+
+    return info
+
+
+def get_value_in_same_row(df, search_value, search_column, target_column):
+    """
+    Retrieves a value from a specified column in the same row where a given value is found.
+
+    Args:
+        df (pandas.DataFrame): The dataframe to search within.
+        search_value (any): The value to locate within the `search_column`.
+        search_column (str): The column name where `search_value` is searched.
+        target_column (str): The column name from which to retrieve the corresponding value.
+
+    Returns:
+        any | None: The value from `target_column` in the same row as `search_value`,
+        or None if no match is found or the value is NaN.
+
+    .. rubric:: Behavior
+    - Searches for `search_value` in `search_column` of the dataframe.
+    - If a matching row is found, retrieves the corresponding value from `target_column`.
+    - Returns `None` if no match is found or the retrieved value is NaN.
+
+    Note:
+        - Uses `pandas.isna()` to check for missing values and convert them to `None`.
+    """
+    import pandas
+
+    result = df.loc[df[search_column] == search_value, target_column]
+
+    if result.empty:
+        return None  # No match found
+
+    value = result.values[0]
+    return None if pandas.isna(value) else value  # Convert NaN to None
+
+
+def format_date(date_str):
+    """
+    Converts a date string into the 'YYYY-MM-DD' format.
+
+    Args:
+        date_str (str): The input date string, expected in various formats (e.g., 'DD.MM.YYYY').
+
+    Returns:
+        str | None: The formatted date as 'YYYY-MM-DD', or None if the input is invalid.
+
+    .. rubric:: Behavior
+    - Parses the input date string, assuming the day comes first (DD.MM.YYYY).
+    - Converts the date into the 'YYYY-MM-DD' format.
+    - If the date is invalid or cannot be parsed, returns None.
+
+    Note:
+        - Uses `pandas.to_datetime()` with `errors="coerce"` to handle invalid dates.
+    """
+    import pandas
+    return pandas.to_datetime(date_str, dayfirst=True, errors="coerce").strftime("%Y-%m-%d")

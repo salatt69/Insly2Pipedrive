@@ -17,7 +17,7 @@ SELLER = 'dd13df304df939c49502d228441a544b2d7540a4'
 POLICY_NO = '30bbd24791ef12c955ed795a6e93d64c4fd31fa1'
 RENEWAL_POLICY_QUANTITY = '31106618eed52b54ca1e9a25eb8113fea358257f'
 PRODUCT = '361d053d9234bc515f0884ecb4a12958c3b50574'
-POLICY_ON_ATTB = '5b82893d6b640fa4e3ff36cfd44520ec569b73e8'
+POLICY_ON_ATTB = 'be7971917439175064ba3ed00be57abff847b7a8'
 OBJECTS = '6981d2e1dc3d0212c5e581a4d627a18ac976f83f'
 END_DATE = 'bee031bba9bdbeec53a9f85186f2a9f853fa8809'
 INSURER = 'd897fe9647fdb08f70ff8abacf75a4e1c6078c5c'
@@ -135,20 +135,20 @@ class Pipedrive:
             "status": policy_info_arr[7],
             "visible_to": 3,
             "custom_fields": {
-                # RENEWED_OFFER_QUANTITY:         None,
-                # RENEWAL_START_DATE:             None,
+                RENEWED_OFFER_QUANTITY:         None,
+                RENEWAL_START_DATE:             None,
                 SELLER: policy_info_arr[9],
                 POLICY_NO: policy_info_arr[5],
-                # RENEWAL_POLICY_QUANTITY:        None,
+                RENEWAL_POLICY_QUANTITY:        None,
                 PRODUCT: Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
-                # POLICY_ON_ATTB:                 None,
+                POLICY_ON_ATTB:                 None,
                 OBJECTS: truncate_utf8(policy_info_arr[3]),
                 END_DATE: policy_info_arr[4],
                 INSURER: Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
-                # REGISTRATION_CERTIFICATE_NO:    None,
-                # RENEWAL:                        None,
-                # RENEWED_POLICY_INSURER:         None,
-                # STATUS:                         None
+                REGISTRATION_CERTIFICATE_NO:    None,
+                RENEWAL:                        None,
+                RENEWED_POLICY_INSURER:         None,
+                STATUS:                         None,
                 POLICY_OID: str(policy_info_arr[10])
             }
         }
@@ -700,6 +700,49 @@ class Pipedrive:
                 print(f'\t{person_id}: Person updated!')
             else:
                 print(f"'update_person': '{person_id}' Request failed with status code {response.status_code}")
+                print(response.json())
+
+        @staticmethod
+        def deal_custom_fields(deal_id, info):
+            """
+            Updates custom fields for an existing deal in Pipedrive.
+
+            Args:
+                deal_id (int): The ID of the deal to update.
+                info (list): A list containing updated custom field values in the predefined order.
+
+            Returns:
+                None
+
+            .. rubric:: Behavior
+            - Constructs an updated deal body with custom fields.
+            - Sends a PATCH request to the Pipedrive API to update the deal.
+            - If the request succeeds, logs a success message.
+            - If the request fails, logs an error message.
+
+            Note:
+                - Uses `BASE_URL_V2` for the API endpoint.
+            """
+            url = f'{BASE_URL_V2}/deals/{deal_id}'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+            body = {
+                "custom_fields": {
+                    POLICY_ON_ATTB: info[0],
+                    RENEWED_OFFER_QUANTITY: info[1],
+                    RENEWAL_POLICY_QUANTITY: info[2],
+                    RENEWED_POLICY_INSURER: info[3],
+                    STATUS: info[4],
+                    RENEWAL: info[5],
+                    RENEWAL_START_DATE: info[6],
+                    REGISTRATION_CERTIFICATE_NO: info[7]
+                }
+            }
+            response = requests.patch(url=url, params=params, json=body)
+
+            if response.status_code == 200:
+                print(f'\t{deal_id}: Deal updated!')
+            else:
+                print(f"'update_deal': '{deal_id}' Request failed with status code {response.status_code}")
                 print(response.json())
 
         @staticmethod
