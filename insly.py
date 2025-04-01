@@ -1,8 +1,11 @@
 import requests
 import time
 import os
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from helper import format_objects_to_html
+
+load_dotenv()
 
 INSLY_TOKEN = os.getenv('BEARER_TOKEN')
 MAX_RETRIES = 10

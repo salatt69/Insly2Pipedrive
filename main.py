@@ -3,6 +3,7 @@ import os
 import http.client
 import traceback
 
+from dotenv import load_dotenv
 from pipedrive import Pipedrive
 from insly import get_customer_policy, get_customer_list
 from helper import retry_requests, fetch_table, fetch_non_api_data
@@ -143,6 +144,9 @@ def main():
     Returns:
         None: The function executes the pipeline but does not return a value.
     """
+
+    load_dotenv()
+
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
     pd = Pipedrive(pd_token)
 
