@@ -178,7 +178,7 @@ def fetch_non_api_data(data, policy_number):
         policy_number (any): The policy number used to locate the relevant row.
 
     Returns:
-        tuple: A tuple containing extracted values.
+        list: A list containing extracted values.
 
     .. rubric:: Behavior
     - Searches for the given `policy_number` in the "Polise" column.
