@@ -458,3 +458,50 @@ def fetch_customer_data(data):
                      c_type, c_owner, c_personal_phone, c_idcode)
 
     return address_info, customer_info
+
+
+def is_it_fully_paid(policy_oid):
+    """
+    Checks if the given policy is fully paid based on its installments.
+
+    Args:
+        policy_oid (str): The unique identifier of the policy.
+
+    Returns:
+        bool: `True` if the policy is fully paid, otherwise `False`.
+
+    .. rubric:: Behavior
+    - Sends a `POST` request to the Insly API to fetch the policy details using `policy_oid`.
+    - Checks the list of payments for the policy, identifying the last installment.
+    - Compares the number of the last installment with the total number of installments.
+    - If the last installment number matches the total installments and its status is 12 (fully paid), returns `True`.
+    - If the policy is not fully paid or no installment matches the criteria, returns `False`.
+    - If the request fails, prints an error message with the status code and returns `False`.
+
+    Note:
+        - Uses the Insly API endpoint `https://vingo-api.insly.com/api/policy/getpolicy`.
+        - The request uses an authorization token (`INSLY_TOKEN`) to authenticate.
+        - The installment status `12` represents a fully paid status.
+    """
+    url = 'https://vingo-api.insly.com/api/policy/getpolicy'
+    body = {"policy_oid": policy_oid}
+    headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
+
+    response = requests.post(url=url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        policy = response.json()
+
+        if policy.get('payment'):
+            last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
+
+            if last_installment['policy_installment_num'] == policy['policy_installments']:
+                status = last_installment['policy_installment_status']
+
+                if status == 12:  # Fully paid
+                    return True
+        return False
+
+    else:
+        print(f"'is_it_fully_paid': Request failed with status code {response.status_code}")
+        return False

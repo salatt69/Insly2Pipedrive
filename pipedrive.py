@@ -1,4 +1,5 @@
 import json
+import time
 
 import requests
 from datetime import datetime
@@ -23,7 +24,7 @@ END_DATE = 'bee031bba9bdbeec53a9f85186f2a9f853fa8809'
 INSURER = 'd897fe9647fdb08f70ff8abacf75a4e1c6078c5c'
 REGISTRATION_CERTIFICATE_NO = 'eeefe1dfe026ffd8d13ce4a57af8650e8c8fb20a'
 RENEWAL = 'f21e42e467108b3c0fce3f32834aa5ba48a5bad3'
-RENEWED_POLICY_INSURER = 'fd5b6d71087035a3a5661481117eca35f36c8f15'
+RENEWED_POLICY_INSURER = '471feb53601b3f016fb41ea421c9fd9c3a368602'
 STATUS = '0cbadc7b01827c2ace7dfae87f7c710178dcdc42'
 ORG_PHONE_NUMBER = '2f6ca1565cb01c3be96e09155b7d3ad3ed90a22f'
 ORG_MOBILE_PHONE_NUMBER = '3a029778616fb8d7b46a80cb257b120fc39ebbb9'
@@ -449,6 +450,67 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
+        def all_deals(start_pos=0, limit=50, results=None):
+            """
+            Retrieves all deals from Pipedrive, collecting `id` and values associated with `POLICY_OID`.
+
+            Args:
+                start_pos (int): The starting position for pagination. Defaults to 0.
+                limit (int): The number of deals to fetch per request. Defaults to 50.
+                results (list): A list to accumulate extracted dictionaries. Defaults to None.
+
+            Returns:
+                list[dict]: A list of dictionaries containing `id` and `POLICY_OID` values.
+
+            .. rubric:: Behavior
+            - Sends a request to the Pipedrive API to retrieve deals with pagination.
+            - Extracts and stores the `id` and the corresponding `POLICY_OID` value from each deal.
+            - If there are more items available, recursively calls itself with `next_start`.
+            - Accumulates all extracted data across multiple paginated requests.
+            - Returns the full list of dictionaries.
+
+            Note:
+                - Uses `BASE_URL_V1` for the API endpoint.
+                - The function is recursive and continues fetching until all deals are retrieved.
+                - Includes a small delay (`time.sleep(0.5)`) between requests to avoid hitting rate limits.
+                - Ensures that both `id` and `POLICY_OID` values are captured for each deal.
+            """
+            if results is None:
+                results = []
+
+            url = f'{BASE_URL_V1}/deals'
+            params = {
+                'api_token': PIPEDRIVE_TOKEN,
+                'filter_id': 68,
+                'start': start_pos,
+                'limit': limit
+            }
+
+            response = requests.get(url=url, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+
+                if 'data' in data and isinstance(data['data'], list):
+                    for item in data['data']:
+                        policy_value = item.get(POLICY_OID)
+                        deal_id = item.get("id")
+                        if policy_value is not None and deal_id is not None:
+                            results.append({"id": deal_id, "policy": policy_value})
+
+                pagination = data.get('additional_data', {}).get('pagination', {})
+                if pagination.get('more_items_in_collection'):
+                    next_start = pagination.get('next_start')
+                    time.sleep(0.5)
+                    return Pipedrive.Search.all_deals(start_pos=next_start, limit=limit, results=results)
+
+            else:
+                print(f"Request failed with status code {response.status_code}")
+                print(response.json())
+
+            return results
+
+        @staticmethod
         def note(deal_id):
             """
             Searches for a note associated with a given deal in Pipedrive.
@@ -742,7 +804,7 @@ class Pipedrive:
             if response.status_code == 200:
                 print(f'\t{deal_id}: Deal updated!')
             else:
-                print(f"'update_deal': '{deal_id}' Request failed with status code {response.status_code}")
+                print(f"'update_deal_custom_fields': '{deal_id}' Request failed with status code {response.status_code}")
                 print(response.json())
 
         @staticmethod
@@ -779,6 +841,41 @@ class Pipedrive:
                 print(f'\t{deal_id}: Deal updated!')
             else:
                 print(f"'update_deal': '{deal_id}' Request failed with status code {response.status_code}")
+                print(response.json())
+
+        @staticmethod
+        def deal_status(deal_id, status):
+            """
+            Updates the status of a specific deal in Pipedrive.
+
+            Args:
+                deal_id (int): The ID of the deal to be updated.
+                status (str): The new status to set for the deal.
+
+            Returns:
+                None: The function updates the deal status and prints a success message or an error message.
+
+            .. rubric:: Behavior
+            - Sends a `PATCH` request to the Pipedrive API to update the status of a deal.
+            - If the request is successful (status code 200), prints a confirmation message with the deal ID.
+            - If the request fails, prints an error message with the status code and response details.
+
+            Note:
+                - Uses `BASE_URL_V2` for the API endpoint.
+                - The request is made with the `api_token` parameter for authentication.
+                - The body of the request contains the new `status` to be updated.
+            """
+            url = f'{BASE_URL_V2}/deals/{deal_id}'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+            body = {
+                "status": status
+            }
+            response = requests.patch(url=url, params=params, json=body)
+
+            if response.status_code == 200:
+                print(f'\t{deal_id}: Deal status updated!')
+            else:
+                print(f"'update_deal_status': '{deal_id}' Request failed with status code {response.status_code}")
                 print(response.json())
 
         @staticmethod

@@ -5,7 +5,7 @@ import traceback
 
 from dotenv import load_dotenv
 from pipedrive import Pipedrive
-from insly import get_customer_policy, get_customer_list
+from insly import get_customer_policy, get_customer_list, is_it_fully_paid
 from helper import retry_requests, fetch_table, fetch_non_api_data
 
 
@@ -165,9 +165,15 @@ def main():
         process_customer(pd, oid, i)
         time.sleep(1)
 
-    ### SECOND PART ###
+    ###########################
+    ### TABLE DATA FETCHING ###
+    ###########################
+
     print(f"\nProceeding to Non-API data fetch...\n")
     data = fetch_table("https://docs.google.com/spreadsheets/d/1Wglpdxroz3K82al0eoGNPEWCoqY2FNi6OtOr4e6ZQZE/export?format=csv")
+    if not data:
+        print("No data found. Exiting.")
+        return
 
     policy_numbers = data["Polise"].tolist()
 
@@ -182,6 +188,26 @@ def main():
             info = fetch_non_api_data(data, policy_numbers[i])
             pd.Update.deal_custom_fields(deal_id, info)
         time.sleep(0.2)
+
+    ########################################
+    ### FILTERED DEALS STATUS ASSIGNMENT ###
+    ########################################
+
+    print('Fetching filtered deals...')
+    filtered_deals = pd.Search.all_deals()
+    print(f"{len(filtered_deals)} deals found!\n")
+
+    for i in range(len(filtered_deals)):
+        policy_oid = filtered_deals[i].get('policy')
+        deal_id = filtered_deals[i].get('id')
+
+        print(f"#{i + 1} P_OID: {policy_oid}")
+
+        if is_it_fully_paid(policy_oid):
+            pd.Update.deal_status(deal_id, 'won')
+            time.sleep(1)
+        else:
+            print(f"\tNot fully paid")
 
 
 if __name__ == '__main__':
