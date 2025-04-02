@@ -171,7 +171,7 @@ def main():
 
     print(f"\nProceeding to Non-API data fetch...\n")
     data = fetch_table("https://docs.google.com/spreadsheets/d/1Wglpdxroz3K82al0eoGNPEWCoqY2FNi6OtOr4e6ZQZE/export?format=csv")
-    if not data:
+    if data.empty:
         print("No data found. Exiting.")
         return
 
