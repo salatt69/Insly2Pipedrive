@@ -207,7 +207,6 @@ def fetch_non_api_data(data, policy_number):
                                                    policy_number,
                                                    "Polise",
                                                    "Atjaunotā polise: apdrošinātājs")
-    renewed_policy_insurer = None
 
     status_label = get_value_in_same_row(data,
                                          policy_number,
