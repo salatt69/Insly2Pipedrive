@@ -156,7 +156,7 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    start_from = 130
+    start_from = 1
 
     remaining_oids = customer_oids[start_from - 1:]
 
