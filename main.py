@@ -1,3 +1,4 @@
+import datetime
 import time
 import os
 import http.client
@@ -6,8 +7,8 @@ import traceback
 from dotenv import load_dotenv
 from pipedrive import Pipedrive
 from insly import get_customer_policy, get_customer_list, is_it_fully_paid
-from helper import retry_requests, fetch_table, fetch_non_api_data
-
+from helper import retry_requests, fetch_non_api_data
+from spreadsheet_communication import read_data_from_worksheet
 
 def process_customer(pd, oid, counter):
     """
@@ -170,14 +171,21 @@ def main():
     ###########################
 
     print(f"\nProceeding to Non-API data fetch...\n")
-    data = fetch_table("https://docs.google.com/spreadsheets/d/1Wglpdxroz3K82al0eoGNPEWCoqY2FNi6OtOr4e6ZQZE/export?format=csv")
-    if data.empty:
+    data = read_data_from_worksheet()
+
+    if data is None:
         print("No data found. Exiting.")
         return
 
     policy_numbers = data["Polise"].tolist()
+    policy_numbers = policy_numbers[1:]
+    print(policy_numbers)
 
     for i in range(len(policy_numbers)):
+        if policy_numbers[i] == '-- nav izdota --':
+            print(f"#{i + 1} P_NO: -- nav izdota --")
+            continue
+
         deal_id, deal_title = pd.Search.deal(policy_numbers[i]) or (None, None)
 
         if deal_id is None:
@@ -210,5 +218,32 @@ def main():
             print(f"\tNot fully paid")
 
 
+def run_daily():
+    """
+    Runs the `main()` function once a day, at midnight UTC, in an infinite loop.
+
+    .. rubric:: Behavior
+    - Continuously runs the `main()` function in a loop.
+    - After each execution of `main()`, calculates the time until the next midnight UTC.
+    - Pauses the execution using `time.sleep()` for the calculated duration, ensuring that the next `main()` run happens at midnight UTC.
+    - Prints a message indicating the script is sleeping until the next scheduled run and then prints a message when it's running again.
+
+    Notes:
+        - The function uses `datetime` to calculate the exact number of seconds until midnight UTC.
+        - The loop ensures that `main()` is executed once per day, and any errors or exceptions in `main()` will not stop the loop.
+
+    Returns:
+        None: The function does not return any value, it repeatedly calls `main()` at scheduled intervals.
+    """
+    while True:
+        main()
+        now = datetime.datetime.now(datetime.UTC)
+        next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
+        sleep_time = (next_midnight - now).total_seconds()
+        print(f"Sleeping until 00:00 UTC...")
+        time.sleep(sleep_time)
+        print(f"\n\tRUNNING AGAIN!\n")
+
+
 if __name__ == '__main__':
-    main()
+    run_daily()

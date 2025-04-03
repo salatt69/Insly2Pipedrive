@@ -191,24 +191,24 @@ def fetch_non_api_data(data, policy_number):
     policy_on_attb = get_value_in_same_row(data,
                                            policy_number,
                                            "Polise",
-                                           "Atb. par polisi")
+                                           "Atb. par polisi") or None
     renewed_offer_quantity = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Atjaunotais piedāvājums: numurs")
+                                                   "Atjaunotais piedāvājums: numurs") or None
     renewal_policy_quantity = get_value_in_same_row(data,
                                                     policy_number,
                                                     "Polise",
-                                                    "Atjaunotā polise: numurs")
+                                                    "Atjaunotā polise: numurs") or None
     renewed_policy_insurer = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Atjaunotā polise: apdrošinātājs")
+                                                   "Atjaunotā polise: apdrošinātājs") or None
 
     status_label = get_value_in_same_row(data,
                                          policy_number,
                                          "Polise",
-                                         "Statuss")
+                                         "Statuss") or None
     if status_label == "nav spēkā":
         status = 40
     elif status_label == "spēkā":
@@ -219,7 +219,7 @@ def fetch_non_api_data(data, policy_number):
     renewal_label = get_value_in_same_row(data,
                                           policy_number,
                                           "Polise",
-                                          "Atjaunojums")
+                                          "Atjaunojums") or None
     if renewal_label == "atjaunots":
         renewal = 42
     elif renewal_label == "atjaunošana nav sākta":
@@ -230,7 +230,7 @@ def fetch_non_api_data(data, policy_number):
     renewal_start_date_str = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Renewal start date")
+                                                   "Renewal start date") or None
     if renewal_start_date_str is not None:
         renewal_start_date = format_date(renewal_start_date_str)
     else:
@@ -239,7 +239,7 @@ def fetch_non_api_data(data, policy_number):
     registration_certificate_no = get_value_in_same_row(data,
                                                         policy_number,
                                                         "Polise",
-                                                        "Reģ. apliecības nr.")
+                                                        "Reģ. apliecības nr.") or None
 
     info = (policy_on_attb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
             status, renewal, renewal_start_date, registration_certificate_no)
@@ -299,4 +299,10 @@ def format_date(date_str):
         - Uses `pandas.to_datetime()` with `errors="coerce"` to handle invalid dates.
     """
     import pandas
-    return pandas.to_datetime(date_str, dayfirst=True, errors="coerce").strftime("%Y-%m-%d")
+    parsed_date = pandas.to_datetime(date_str, dayfirst=True, errors="coerce")
+
+    # Check if the parsed date is valid (i.e., not NaT)
+    if pandas.isna(parsed_date):
+        return None
+
+    return parsed_date.strftime("%Y-%m-%d")
