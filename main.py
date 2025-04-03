@@ -91,7 +91,7 @@ def process_customer(pd, oid, counter):
                 if deal_id is None:
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
                 else:
-                    pd.Update.deal(deal_id, policy_i[i], entity_id, entype, customer_i[0][5])
+                    pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
 
                 note_id = pd.Search.note(deal_id)
 
@@ -156,7 +156,7 @@ def main():
         print("No customer OIDs found. Exiting.")
         return
 
-    start_from = 1
+    start_from = 130
 
     remaining_oids = customer_oids[start_from - 1:]
 
@@ -178,7 +178,7 @@ def main():
         return
 
     policy_numbers = data["Polise"].tolist()
-    policy_numbers = policy_numbers[1:]
+    policy_numbers = policy_numbers[2045:]
     print(policy_numbers)
 
     for i in range(len(policy_numbers)):

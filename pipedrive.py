@@ -106,7 +106,7 @@ class Pipedrive:
             policy_info_arr (list): A list containing policy details in the predefined order.
             entity_id (int): The ID of the associated entity (e.g., company or person).
             entype (str): The type of entity associated with the deal.
-            deal_owner (int): The Pipedrive user ID of the deal owner.
+            deal_owner (int | None): The Pipedrive user ID of the deal owner.
 
         Returns:
             dict: A dictionary representing the deal's request body, ready for use in API calls to Pipedrive.
@@ -129,27 +129,18 @@ class Pipedrive:
         """
         body = {
             "title": policy_info_arr[0],
-            "owner_id": deal_owner,
             "currency": policy_info_arr[1],
             "value": policy_info_arr[2],
             "expected_close_date": policy_info_arr[4],
             "status": policy_info_arr[7],
             "visible_to": 3,
             "custom_fields": {
-                RENEWED_OFFER_QUANTITY:         None,
-                RENEWAL_START_DATE:             None,
                 SELLER: policy_info_arr[9],
                 POLICY_NO: policy_info_arr[5],
-                RENEWAL_POLICY_QUANTITY:        None,
                 PRODUCT: Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
-                POLICY_ON_ATTB:                 None,
                 OBJECTS: truncate_utf8(policy_info_arr[3]),
                 END_DATE: policy_info_arr[4],
                 INSURER: Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
-                REGISTRATION_CERTIFICATE_NO:    None,
-                RENEWAL:                        None,
-                RENEWED_POLICY_INSURER:         None,
-                STATUS:                         None,
                 POLICY_OID: str(policy_info_arr[10])
             }
         }
@@ -158,6 +149,9 @@ class Pipedrive:
             body['won_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")
                                 .replace(hour=9, minute=0, second=0).strftime('%Y-%m-%dT%H:%M:%SZ'))
             body['stage_id'] = 5
+
+        if deal_owner is not None:
+            body['owner_id'] = deal_owner
 
         if entype == 'org':
             body["org_id"] = entity_id
@@ -620,7 +614,7 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal(policy_info_arr, entity_id, entype, deal_owner):
+        def deal(policy_info_arr, entity_id, entype, deal_owner=None):
             """
             Adds a new deal to Pipedrive.
 
@@ -808,7 +802,7 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal(deal_id, policy_info_arr, entity_id, entype, deal_owner):
+        def deal(deal_id, policy_info_arr, entity_id, entype):
             """
             Updates an existing deal in Pipedrive.
 
@@ -830,10 +824,11 @@ class Pipedrive:
 
             Note:
                 - Uses `BASE_URL_V2` for the API endpoint.
+                - `deal_owner` is hardcoded None, in order to assign owner only when deal is being created.
             """
             url = f'{BASE_URL_V2}/deals/{deal_id}'
             params = {'api_token': PIPEDRIVE_TOKEN}
-            body = Pipedrive.get_deal_body(policy_info_arr, entity_id, entype, deal_owner)
+            body = Pipedrive.get_deal_body(policy_info_arr, entity_id, entype, None)
 
             response = requests.patch(url=url, params=params, json=body)
 
