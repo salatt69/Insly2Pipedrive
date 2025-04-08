@@ -166,26 +166,31 @@ def fetch_table(url):
     return pandas.read_csv(url, skiprows=2, header=1)
 
 
-def fetch_non_api_data(data, policy_number):
+def fetch_non_api_data(data, seller_data, policy_on_attb_data, policy_number):
     """
-    Extracts policy-related information from a given dataset based on a policy number.
+    Extracts policy-related information from multiple datasets based on a policy number.
 
     Args:
         data (pandas.DataFrame): The dataset containing policy details.
+        seller_data (pandas.DataFrame): The dataset mapping seller names to their Pipedrive IDs.
+        policy_on_attb_data (pandas.DataFrame): The dataset mapping policy responsibles to their Pipedrive IDs.
         policy_number (any): The policy number used to locate the relevant row.
 
     Returns:
-        list: A list containing extracted values.
+        list: A list containing extracted and transformed values.
 
     .. rubric:: Behavior
-    - Searches for the given `policy_number` in the "Polise" column.
+    - Searches for the given `policy_number` in the "Polise" column of the main dataset.
     - Retrieves corresponding values from multiple columns related to the policy.
-    - Converts status and renewal labels into numeric codes.
+    - Looks up Pipedrive option IDs from supplementary datasets using seller and responsibility data.
+    - Converts status and renewal labels into numeric codes:
+        - Status: "nav spēkā" → 40, "spēkā" → 41
+        - Renewal: "atjaunots" → 42, "atjaunošana nav sākta" → 43
     - Formats the renewal start date into 'YYYY-MM-DD'.
-    - Returns `None` if a value is missing or invalid.
+    - Returns `None` if a value is missing, unrecognized, or invalid.
 
     Note:
-        - Uses `get_value_in_same_row()` to extract data.
+        - Uses `get_value_in_same_row()` to extract data from rows.
         - Uses `format_date()` to standardize date formatting.
     """
     policy_on_attb = get_value_in_same_row(data,
@@ -240,9 +245,27 @@ def fetch_non_api_data(data, policy_number):
                                                         policy_number,
                                                         "Polise",
                                                         "Reģ. apliecības nr.") or None
+    seller_list = get_value_in_same_row(data,
+                                        policy_number,
+                                        "Polise",
+                                        "Pārdevējs") or None
+    pipedrive_seller_option_id = get_value_in_same_row(seller_data,
+                                                       seller_list,
+                                                       "Pārdevējs",
+                                                       "ID_PipeDrive") or None
+
+    policy_on_attb_list = get_value_in_same_row(data,
+                                                policy_number,
+                                                "Polise",
+                                                "Atb. par polisi") or None
+    pipedrive_policy_on_attb_option_id = get_value_in_same_row(policy_on_attb_data,
+                                                               policy_on_attb_list,
+                                                               "Atb. par polisi",
+                                                               "ID_PipeDrive") or None
 
     info = (policy_on_attb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
-            status, renewal, renewal_start_date, registration_certificate_no)
+            status, renewal, renewal_start_date, registration_certificate_no, int(pipedrive_seller_option_id),
+            int(pipedrive_policy_on_attb_option_id))
 
     return info
 

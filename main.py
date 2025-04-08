@@ -171,14 +171,15 @@ def main():
     ###########################
 
     print(f"\nProceeding to Non-API data fetch...\n")
-    data = read_data_from_worksheet()
+    data = read_data_from_worksheet(start_row=5, custom_column=4, sheet_number=1)
+    seller_data = read_data_from_worksheet(start_row=2, sheet_number=2)
+    policy_on_attb_data = read_data_from_worksheet(start_row=2, sheet_number=3)
 
     if data is None:
         print("No data found. Exiting.")
         return
 
     policy_numbers = data["Polise"].tolist()
-    policy_numbers = policy_numbers[2045:]
     print(policy_numbers)
 
     for i in range(len(policy_numbers)):
@@ -193,7 +194,7 @@ def main():
         else:
             print(f"#{i + 1} P_NO: {policy_numbers[i]}")
 
-            info = fetch_non_api_data(data, policy_numbers[i])
+            info = fetch_non_api_data(data, seller_data, policy_on_attb_data, policy_numbers[i])
             pd.Update.deal_custom_fields(deal_id, info)
         time.sleep(0.2)
 

@@ -27,7 +27,7 @@ def authenticate():
     return client
 
 
-def read_data_from_worksheet():
+def read_data_from_worksheet(start_row=1, custom_column=1, sheet_number=1):
     """
     Authenticates with Google Sheets, retrieves data from the first worksheet of a specified spreadsheet,
     and returns it as a pandas DataFrame.
@@ -49,11 +49,11 @@ def read_data_from_worksheet():
     """
     client = authenticate()
     spreadsheet = client.open(os.getenv('SPREADSHEET_NAME'))
-    worksheet = spreadsheet.sheet1
+    worksheet = spreadsheet.get_worksheet(sheet_number-1)
 
     data = worksheet.get_all_values()
 
     # Convert the list of lists into a pandas DataFrame and skip unnecessary rows
-    df = pd.DataFrame(data[3:], columns=data[3])
+    df = pd.DataFrame(data[start_row-1:], columns=data[custom_column-1])
 
     return df
