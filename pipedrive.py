@@ -14,11 +14,11 @@ INSLY_PERSON_OID = '86cae975675fb340afc1574e4743ae2f91604c62'
 INSLY_ORGANIZATION_OID = '56fb82b7bf51f92fa7bb075d6225b240aca335c4'
 RENEWED_OFFER_QUANTITY = '047f09d9770a057ee11f1285d1a9040753396a73'
 RENEWAL_START_DATE = '277fae927484ea6779a715627105166d61593f96'
-SELLER = 'dd13df304df939c49502d228441a544b2d7540a4'
+# SELLER = 'dd13df304df939c49502d228441a544b2d7540a4'
 POLICY_NO = '30bbd24791ef12c955ed795a6e93d64c4fd31fa1'
 RENEWAL_POLICY_QUANTITY = '31106618eed52b54ca1e9a25eb8113fea358257f'
 PRODUCT = '361d053d9234bc515f0884ecb4a12958c3b50574'
-POLICY_ON_ATTB = 'be7971917439175064ba3ed00be57abff847b7a8'
+POLICY_ON_ATTB = 'bf0217a840456447e891aebbf04ad4e433440a8e'
 OBJECTS = '6981d2e1dc3d0212c5e581a4d627a18ac976f83f'
 END_DATE = 'bee031bba9bdbeec53a9f85186f2a9f853fa8809'
 INSURER = 'd897fe9647fdb08f70ff8abacf75a4e1c6078c5c'
@@ -137,7 +137,7 @@ class Pipedrive:
             "status": policy_info_arr[7],
             "visible_to": 3,
             "custom_fields": {
-                SELLER: policy_info_arr[9],
+                # SELLER: policy_info_arr[9],
                 POLICY_NO: policy_info_arr[5],
                 PRODUCT: Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
                 OBJECTS: truncate_utf8(policy_info_arr[3]),
