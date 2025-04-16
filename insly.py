@@ -155,7 +155,7 @@ def get_customer_policy(oid, counter):
                                 status = last_installment['policy_installment_status']
 
                                 if status == 12:  # Fully paid
-                                    fetched_p_info[7] = 'open'
+                                    fetched_p_info[7] = 'won'
                                 elif status == 99:  # Cancelled
                                     fetched_p_info[7] = 'lost'
                                 else:               # Added, invoice created, partially paid
