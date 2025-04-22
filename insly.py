@@ -117,7 +117,6 @@ def get_customer_policy(oid, counter):
                     if latest_date <= exp_date < current_date:
                         print(f"#{counter} Customer {oid}:"
                               f" Policy {policy['policy_no']} closed after {latest_date}.")
-                        # continue
 
                     elif current_date <= exp_date < future_date:
                         print(f"#{counter} Customer {oid}:"
@@ -133,8 +132,10 @@ def get_customer_policy(oid, counter):
 
                     fetched_p_info = list(fetched_p_info)
 
+                    fetched_p_info[7] = 'open'  # Default
+
                     if latest_date <= exp_date < current_date:
-                        fetched_p_info[7] = 'lost'  # Default
+                        fetched_p_info[7] = 'lost'  # Default if expired
 
                         if policy.get('payment'):
                             last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
@@ -144,22 +145,6 @@ def get_customer_policy(oid, counter):
 
                                 if status == 12:  # Fully paid
                                     fetched_p_info[7] = 'won'
-
-                    elif current_date <= exp_date < future_date:
-                        fetched_p_info[7] = 'open'  # Default
-
-                        if policy.get('payment'):
-                            last_installment = max(policy['payment'], key=lambda x: x['policy_installment_num'])
-
-                            if last_installment['policy_installment_num'] == policy['policy_installments']:
-                                status = last_installment['policy_installment_status']
-
-                                if status == 12:  # Fully paid
-                                    fetched_p_info[7] = 'won'
-                                elif status == 99:  # Cancelled
-                                    fetched_p_info[7] = 'lost'
-                                else:               # Added, invoice created, partially paid
-                                    fetched_p_info[7] = 'open'
 
                     fetched_p_info = tuple(fetched_p_info)
 
