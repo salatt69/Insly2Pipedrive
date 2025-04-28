@@ -198,25 +198,25 @@ def main():
             pd.Update.deal_custom_fields(deal_id, info)
         time.sleep(0.2)
 
-    ########################################
-    ### FILTERED DEALS STATUS ASSIGNMENT ###
-    ########################################
-
-    print('Fetching filtered deals...')
-    filtered_deals = pd.Search.all_deals()
-    print(f"{len(filtered_deals)} deals found!\n")
-
-    for i in range(len(filtered_deals)):
-        policy_oid = filtered_deals[i].get('policy')
-        deal_id = filtered_deals[i].get('id')
-
-        print(f"#{i + 1} P_OID: {policy_oid}")
-
-        if is_it_fully_paid(policy_oid):
-            pd.Update.deal_status(deal_id, 'won')
-            time.sleep(1)
-        else:
-            print(f"\tNot fully paid")
+    # ########################################
+    # ### FILTERED DEALS STATUS ASSIGNMENT ###
+    # ########################################
+    #
+    # print('Fetching filtered deals...')
+    # filtered_deals = pd.Search.all_deals()
+    # print(f"{len(filtered_deals)} deals found!\n")
+    #
+    # for i in range(len(filtered_deals)):
+    #     policy_oid = filtered_deals[i].get('policy')
+    #     deal_id = filtered_deals[i].get('id')
+    #
+    #     print(f"#{i + 1} P_OID: {policy_oid}")
+    #
+    #     if is_it_fully_paid(policy_oid):
+    #         pd.Update.deal_status(deal_id, 'won')
+    #         time.sleep(1)
+    #     else:
+    #         print(f"\tNot fully paid")
 
 
 def run_daily():
