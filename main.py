@@ -151,20 +151,20 @@ def main():
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
     pd = Pipedrive(pd_token)
 
-    # customer_oids = get_customer_list()
-    # if not customer_oids:
-    #     print("No customer OIDs found. Exiting.")
-    #     return
-    #
-    # start_from = 1
-    #
-    # remaining_oids = customer_oids[start_from - 1:]
-    #
-    # print(f"\n{len(remaining_oids)} OIDs ready!\n")
-    #
-    # for i, oid in enumerate(remaining_oids, start=start_from):
-    #     process_customer(pd, oid, i)
-    #     time.sleep(1)
+    customer_oids = get_customer_list()
+    if not customer_oids:
+        print("No customer OIDs found. Exiting.")
+        return
+
+    start_from = 1
+
+    remaining_oids = customer_oids[start_from - 1:]
+
+    print(f"\n{len(remaining_oids)} OIDs ready!\n")
+
+    for i, oid in enumerate(remaining_oids, start=start_from):
+        process_customer(pd, oid, i)
+        time.sleep(1)
 
     ###########################
     ### TABLE DATA FETCHING ###
