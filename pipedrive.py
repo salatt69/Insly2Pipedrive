@@ -400,12 +400,13 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal(insly_policy_oid):
+        def deal(insly_policy_oid, return_status=False):
             """
             Searches for a deal in Pipedrive using the provided `insly_policy_oid`.
 
             Args:
                 insly_policy_oid (str): The unique identifier of the policy in Insly.
+                return_status (bool): Determines if it returns status value or not
 
             Returns:
                 tuple[int, str] | tuple[None, None]: A tuple containing the deal's ID and title if found,
@@ -432,6 +433,13 @@ class Pipedrive:
                 data = response.json()
                 if data['data']['items']:
                     items = data['data']['items']
+
+                    if return_status:
+                        for item in items:
+                            deal_id = item['item']['id']
+                            deal_title = item['item']['title']
+                            deal_status = item['item']['status']
+                            return deal_id, deal_title, deal_status
 
                     for item in items:
                         deal_id = item['item']['id']
@@ -761,13 +769,14 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def deal_custom_fields(deal_id, info):
+        def deal_custom_fields(deal_id, info, status='open'):
             """
             Updates custom fields for an existing deal in Pipedrive.
 
             Args:
                 deal_id (int): The ID of the deal to update.
                 info (list): A list containing updated custom field values in the predefined order.
+                status (str): Optional variable to set a status value
 
             Returns:
                 None
@@ -797,6 +806,10 @@ class Pipedrive:
                     POLICY_ON_ATTB_LIST: info[9]
                 }
             }
+
+            if status:
+                body["status"] = status
+
             response = requests.patch(url=url, params=params, json=body)
 
             if response.status_code == 200:

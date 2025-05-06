@@ -151,20 +151,20 @@ def main():
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
     pd = Pipedrive(pd_token)
 
-    customer_oids = get_customer_list()
-    if not customer_oids:
-        print("No customer OIDs found. Exiting.")
-        return
-
-    start_from = 1
-
-    remaining_oids = customer_oids[start_from - 1:]
-
-    print(f"\n{len(remaining_oids)} OIDs ready!\n")
-
-    for i, oid in enumerate(remaining_oids, start=start_from):
-        process_customer(pd, oid, i)
-        time.sleep(1)
+    # customer_oids = get_customer_list()
+    # if not customer_oids:
+    #     print("No customer OIDs found. Exiting.")
+    #     return
+    #
+    # start_from = 1
+    #
+    # remaining_oids = customer_oids[start_from - 1:]
+    #
+    # print(f"\n{len(remaining_oids)} OIDs ready!\n")
+    #
+    # for i, oid in enumerate(remaining_oids, start=start_from):
+    #     process_customer(pd, oid, i)
+    #     time.sleep(1)
 
     ###########################
     ### TABLE DATA FETCHING ###
@@ -180,6 +180,7 @@ def main():
         return
 
     policy_numbers = data["Polise"].tolist()
+    policy_numbers = policy_numbers[178:]
     print(policy_numbers)
 
     for i in range(len(policy_numbers)):
@@ -187,7 +188,7 @@ def main():
             print(f"#{i + 1} P_NO: -- nav izdota --")
             continue
 
-        deal_id, deal_title = pd.Search.deal(policy_numbers[i]) or (None, None)
+        deal_id, deal_title, deal_status = pd.Search.deal(policy_numbers[i], True) or (None, None)
 
         if deal_id is None:
             print(f"#{i + 1} P_NO: {policy_numbers[i]} => Deal doesn't exist yet. ")
@@ -195,7 +196,7 @@ def main():
             print(f"#{i + 1} P_NO: {policy_numbers[i]}")
 
             info = fetch_non_api_data(data, seller_data, policy_on_attb_data, policy_numbers[i])
-            pd.Update.deal_custom_fields(deal_id, info)
+            pd.Update.deal_custom_fields(deal_id, info, deal_status)
         time.sleep(0.2)
 
     # ########################################
@@ -238,10 +239,10 @@ def run_daily():
     """
     while True:
         main()
-        now = datetime.datetime.now(datetime.UTC)
+        now = datetime.datetime.now()
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
         sleep_time = (next_midnight - now).total_seconds()
-        print(f"Sleeping until 00:00 UTC...")
+        print(f"Sleeping until 00:00...")
         time.sleep(sleep_time)
         print(f"\n\tRUNNING AGAIN!\n")
 

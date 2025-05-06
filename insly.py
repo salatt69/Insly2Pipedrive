@@ -96,7 +96,7 @@ def get_customer_policy(oid, counter):
             customer_info_added = False
             latest_date = datetime(2024, 1, 1)
             current_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-            future_date = current_date + timedelta(days=21)
+            future_date = current_date + timedelta(days=30)
 
             if BROKER_JSON is None:
                 BROKER_JSON = get_broker_json()
