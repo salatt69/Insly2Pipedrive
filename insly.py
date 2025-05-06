@@ -120,7 +120,7 @@ def get_customer_policy(oid, counter):
 
                     elif current_date <= exp_date < future_date:
                         print(f"#{counter} Customer {oid}:"
-                              f" Policy {policy['policy_no']} ends within 21 days.")
+                              f" Policy {policy['policy_no']} ends within 30 days.")
 
                     if not customer_info_added:
                         fetched_a_info, fetched_c_info = fetch_customer_data(data)

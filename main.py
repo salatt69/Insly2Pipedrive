@@ -180,7 +180,6 @@ def main():
         return
 
     policy_numbers = data["Polise"].tolist()
-    policy_numbers = policy_numbers[178:]
     print(policy_numbers)
 
     for i in range(len(policy_numbers)):
@@ -188,7 +187,7 @@ def main():
             print(f"#{i + 1} P_NO: -- nav izdota --")
             continue
 
-        deal_id, deal_title, deal_status = pd.Search.deal(policy_numbers[i], True) or (None, None)
+        deal_id, deal_title, deal_status = pd.Search.deal(policy_numbers[i], True) or (None, None, None)
 
         if deal_id is None:
             print(f"#{i + 1} P_NO: {policy_numbers[i]} => Deal doesn't exist yet. ")

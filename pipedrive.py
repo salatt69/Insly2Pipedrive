@@ -447,7 +447,7 @@ class Pipedrive:
                         return deal_id, deal_title
 
                 else:
-                    return None, None
+                    return None, None, None
 
             else:
                 print(f"'search_deal': Request failed with status code {response.status_code}")
@@ -794,7 +794,7 @@ class Pipedrive:
             params = {'api_token': PIPEDRIVE_TOKEN}
             body = {
                 "custom_fields": {
-                    POLICY_ON_ATTB: info[0],
+                    # POLICY_ON_ATTB: info[0],
                     RENEWED_OFFER_QUANTITY: info[1],
                     RENEWAL_POLICY_QUANTITY: info[2],
                     RENEWED_POLICY_INSURER: info[3],
