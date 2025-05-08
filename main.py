@@ -161,7 +161,6 @@ def main():
     DATASET = (data, seller_data, policy_on_attb_data)
 
     print('Starting program...')
-    """
     customer_oids = get_customer_list()
     if not customer_oids:
         print("No customer OIDs found. Exiting.")
@@ -176,7 +175,6 @@ def main():
     for i, oid in enumerate(remaining_oids, start=start_from):
         process_customer(pd, oid, i)
         time.sleep(1)
-    """
     ###########################
     ### TABLE DATA FETCHING ###
     ###########################
