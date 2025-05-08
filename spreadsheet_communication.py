@@ -57,3 +57,19 @@ def read_data_from_worksheet(start_row=1, custom_column=1, sheet_number=1):
     df = pd.DataFrame(data[start_row-1:], columns=data[custom_column-1])
 
     return df
+
+
+def process_table_policies(pd, p_no, i, ds):
+    import time
+    from helper import fetch_non_api_data
+    
+    deal_id, deal_title, deal_status = pd.Search.deal(p_no, True) or (None, None, None)
+
+    if deal_id is None:
+        print(f"#{i + 1} P_NO: {p_no} => Policy not found in the table. ")
+    else:
+        print(f"#{i + 1} P_NO: {p_no}")
+
+        info = fetch_non_api_data(p_no, ds[0], ds[1], ds[2])
+        pd.Update.deal_custom_fields(deal_id, info, deal_status)
+    time.sleep(0.2)

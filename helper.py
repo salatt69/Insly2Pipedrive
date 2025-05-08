@@ -166,14 +166,11 @@ def fetch_table(url):
     return pandas.read_csv(url, skiprows=2, header=1)
 
 
-def fetch_non_api_data(data, seller_data, policy_on_attb_data, policy_number):
+def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     """
     Extracts policy-related information from multiple datasets based on a policy number.
 
     Args:
-        data (pandas.DataFrame): The dataset containing policy details.
-        seller_data (pandas.DataFrame): The dataset mapping seller names to their Pipedrive IDs.
-        policy_on_attb_data (pandas.DataFrame): The dataset mapping policy responsibles to their Pipedrive IDs.
         policy_number (any): The policy number used to locate the relevant row.
 
     Returns:

@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from pipedrive import Pipedrive
 from insly import get_customer_policy, get_customer_list, is_it_fully_paid
 from helper import retry_requests, fetch_non_api_data
-from spreadsheet_communication import read_data_from_worksheet
+from spreadsheet_communication import read_data_from_worksheet, process_table_policies
 
 def process_customer(pd, oid, counter):
     """
@@ -93,6 +93,8 @@ def process_customer(pd, oid, counter):
                 else:
                     pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
 
+                process_table_policies(pd, policy_i[i][5], i, DATASET)
+
                 note_id = pd.Search.note(deal_id)
 
                 if note_id is None:
@@ -145,12 +147,21 @@ def main():
     Returns:
         None: The function executes the pipeline but does not return a value.
     """
-
+    print('Initializing environment...')
+    global DATASET
     load_dotenv()
 
     pd_token = os.getenv('PIPEDRIVE_TOKEN')
     pd = Pipedrive(pd_token)
 
+    print('Fetching data from table...')
+    data = read_data_from_worksheet(start_row=5, custom_column=4, sheet_number=1)
+    seller_data = read_data_from_worksheet(start_row=2, sheet_number=2)
+    policy_on_attb_data = read_data_from_worksheet(start_row=2, sheet_number=3)
+    DATASET = (data, seller_data, policy_on_attb_data)
+
+    print('Starting program...')
+    """
     customer_oids = get_customer_list()
     if not customer_oids:
         print("No customer OIDs found. Exiting.")
@@ -165,38 +176,23 @@ def main():
     for i, oid in enumerate(remaining_oids, start=start_from):
         process_customer(pd, oid, i)
         time.sleep(1)
-
+    """
     ###########################
     ### TABLE DATA FETCHING ###
     ###########################
 
-    print(f"\nProceeding to Non-API data fetch...\n")
-    data = read_data_from_worksheet(start_row=5, custom_column=4, sheet_number=1)
-    seller_data = read_data_from_worksheet(start_row=2, sheet_number=2)
-    policy_on_attb_data = read_data_from_worksheet(start_row=2, sheet_number=3)
-
-    if data is None:
+    if DATASET[0] is None:
         print("No data found. Exiting.")
         return
 
-    policy_numbers = data["Polise"].tolist()
+    policy_numbers = DATASET[0]["Polise"].tolist()
     print(policy_numbers)
 
     for i in range(len(policy_numbers)):
         if policy_numbers[i] == '-- nav izdota --':
             print(f"#{i + 1} P_NO: -- nav izdota --")
             continue
-
-        deal_id, deal_title, deal_status = pd.Search.deal(policy_numbers[i], True) or (None, None, None)
-
-        if deal_id is None:
-            print(f"#{i + 1} P_NO: {policy_numbers[i]} => Deal doesn't exist yet. ")
-        else:
-            print(f"#{i + 1} P_NO: {policy_numbers[i]}")
-
-            info = fetch_non_api_data(data, seller_data, policy_on_attb_data, policy_numbers[i])
-            pd.Update.deal_custom_fields(deal_id, info, deal_status)
-        time.sleep(0.2)
+        process_table_policies(pd, policy_numbers[i], i, DATASET)
 
     # ########################################
     # ### FILTERED DEALS STATUS ASSIGNMENT ###
@@ -238,6 +234,7 @@ def run_daily():
     """
     while True:
         main()
+        print(DATA, SELLER_DATA, POLICY_ON_ATTB_DATA)
         now = datetime.datetime.now()
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
         sleep_time = (next_midnight - now).total_seconds()
