@@ -234,7 +234,6 @@ def run_daily():
     """
     while True:
         main()
-        print(DATA, SELLER_DATA, POLICY_ON_ATTB_DATA)
         now = datetime.datetime.now()
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
         sleep_time = (next_midnight - now).total_seconds()
