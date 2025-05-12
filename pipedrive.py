@@ -301,7 +301,8 @@ class Pipedrive:
         body = {
             "content": content,
             "deal_id": deal_id,
-            "user_id": note_owner
+            "user_id": note_owner,
+            "pinned_to_deal_flag": True
         }
         return body
 
