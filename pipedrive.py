@@ -554,6 +554,44 @@ class Pipedrive:
             else:
                 print(f"'search_note': Request failed with status code {response.status_code}")
                 print(response.json())
+                return None
+
+        @staticmethod
+        def payment_table_note(deal_id):
+            """
+            Searches for a note associated with a given deal in Pipedrive.
+
+            Args:
+                deal_id (int): The unique identifier of the deal in Pipedrive.
+
+            Returns:
+                int | None: The ID of the first found note if available, otherwise `None`.
+
+            .. rubric:: Behavior
+            - Sends a request to the Pipedrive API to search for notes associated with `deal_id`.
+            - If notes exist, returns the ID of the first note found.
+            - If no notes are found, returns `None`.
+            - If the request fails, logs an error message.
+
+            Note:
+                - Uses `BASE_URL_V1` for the API endpoint.
+                - The returned `deal_id` can be used for further operations in Pipedrive.
+            """
+            url = f'{BASE_URL_V1}/notes?deal_id={deal_id}'
+            params = {'api_token': PIPEDRIVE_TOKEN}
+
+            response = requests.get(url=url, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+                if data['data'] is not None:
+                    second_id = data["data"][1]["id"] if len(data["data"]) > 1 else None
+                    return second_id
+                return None
+            else:
+                print(f"'search_payment_table_note': Request failed with status code {response.status_code}")
+                print(response.json())
+                return None
 
     class Add:
         """

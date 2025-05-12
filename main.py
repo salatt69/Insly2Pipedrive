@@ -58,7 +58,7 @@ def process_customer(pd, oid, counter):
 
     while max_retry_attempts != retry_attempts:
         try:
-            customer_i, policy_i, address_i, object_i = get_customer_policy(oid, counter)
+            customer_i, policy_i, address_i, object_i, payment_table = get_customer_policy(oid, counter)
 
             if not customer_i:
                 return
@@ -101,6 +101,13 @@ def process_customer(pd, oid, counter):
                     pd.Add.note(object_i[i], deal_id, customer_i[0][5])
                 else:
                     pd.Update.note(note_id, object_i[i], deal_id, customer_i[0][5])
+
+                payment_table_note_id = pd.Search.payment_table_note(deal_id)
+
+                if payment_table_note_id is None:
+                    pd.Add.note(payment_table, deal_id, customer_i[0][5])
+                else:
+                    pd.Update.note(payment_table_note_id, payment_table, deal_id, customer_i[0][5])
             return
 
         except http.client.RemoteDisconnected as e:

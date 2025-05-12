@@ -93,6 +93,7 @@ def get_customer_policy(oid, counter):
             policy_info = []
             address_info = []
             object_info = []
+            payment_table = []
             customer_info_added = False
             latest_date = datetime(2024, 1, 1)
             current_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -103,7 +104,7 @@ def get_customer_policy(oid, counter):
 
             if 'policy' not in data:
                 print(f"#{counter} Customer {oid}: No policies found.")
-                return [], [], [], []
+                return [], [], [], [], []
 
             for policy in data['policy']:
                 p_date_end_raw = policy.get('policy_date_end', '')
@@ -148,6 +149,8 @@ def get_customer_policy(oid, counter):
 
                     fetched_p_info = tuple(fetched_p_info)
 
+                    payment_table = fetch_payment_data(policy)
+
                     # if fetched_p_info[7] != 'open':
                     #     return [], [], [], []
 
@@ -156,17 +159,17 @@ def get_customer_policy(oid, counter):
                 else:
                     print(f"#{counter} Customer {oid}: Policy {policy['policy_no']} out of range.")
 
-            return customer_info, policy_info, address_info, object_info
+            return customer_info, policy_info, address_info, object_info, payment_table
 
         elif response.status_code == 429:
             print(f"Rate limit hit for get_customer_policy. Retrying in {RETRY_DELAY * (2 ** attempt)} seconds...")
             time.sleep(RETRY_DELAY * (2 ** attempt))
         else:
             print(f"'get_customer_policy': Request failed with status code {response.status_code}")
-            return [], [], [], []
+            return [], [], [], [], []
 
     print("Max retries exceeded for get_customer_policy.")
-    return [], [], [], []
+    return [], [], [], [], []
 
 
 def get_classifier_value(value, classifier_field_name: str):
@@ -492,3 +495,30 @@ def is_it_fully_paid(policy_oid):
     else:
         print(f"'is_it_fully_paid': Request failed with status code {response.status_code}")
         return False
+
+
+def fetch_payment_data(policy):
+    installments_html_data = """
+    <table border="1" cellspacing="0" cellpadding="8" style="font-family: sans-serif; font-size: 18px; width: 80%; margin: auto; border-collapse: collapse;">
+      <thead style="background-color: #f2f2f2;">
+        <tr>
+          <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Installment</th>
+          <th style="padding: 12px; width: 25%; text-align: left; border: 1px solid #ddd;">Date</th>
+          <th style="padding: 12px; width: 25%; text-align: left; border: 1px solid #ddd;">Sum</th>
+        </tr>
+      </thead>
+      <tbody>
+    """
+
+    for p in policy["payment"]:
+        installments_html_data += (
+            f"<tr>"
+            f"<td style='padding: 10px; border: 1px solid #ddd;'>{p['policy_installment_num']}</td>"
+            f"<td style='padding: 10px; width: 25%; border: 1px solid #ddd;'>{p['policy_installment_date']}</td>"
+            f"<td style='padding: 10px; width: 25%; border: 1px solid #ddd;'>{p['policy_installment_sum']} {p['policy_installment_currency']}</td>"
+            f"</tr>\n"
+        )
+
+    installments_html_data += "</tbody></table>"
+
+    return installments_html_data
