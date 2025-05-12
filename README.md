@@ -35,7 +35,7 @@ _A skeleton JSON file showcasing the expected key structure._
   "client_id": "",
   "auth_uri": "",
   "token_uri": "",
-  "auth_provider_x509_cert_url": "s",
+  "auth_provider_x509_cert_url": "",
   "client_x509_cert_url": "",
   "universe_domain": ""
 }
