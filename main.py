@@ -175,6 +175,7 @@ def main():
     for i, oid in enumerate(remaining_oids, start=start_from):
         process_customer(pd, oid, i)
         time.sleep(1)
+
     ###########################
     ### TABLE DATA FETCHING ###
     ###########################

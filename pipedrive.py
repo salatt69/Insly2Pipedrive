@@ -23,9 +23,9 @@ OBJECTS = '6981d2e1dc3d0212c5e581a4d627a18ac976f83f'
 END_DATE = 'bee031bba9bdbeec53a9f85186f2a9f853fa8809'
 INSURER = 'd897fe9647fdb08f70ff8abacf75a4e1c6078c5c'
 REGISTRATION_CERTIFICATE_NO = 'eeefe1dfe026ffd8d13ce4a57af8650e8c8fb20a'
-RENEWAL = 'f21e42e467108b3c0fce3f32834aa5ba48a5bad3'
+# RENEWAL = 'f21e42e467108b3c0fce3f32834aa5ba48a5bad3'
 RENEWED_POLICY_INSURER = '471feb53601b3f016fb41ea421c9fd9c3a368602'
-STATUS = '0cbadc7b01827c2ace7dfae87f7c710178dcdc42'
+# STATUS = '0cbadc7b01827c2ace7dfae87f7c710178dcdc42'
 ORG_PHONE_NUMBER = '2f6ca1565cb01c3be96e09155b7d3ad3ed90a22f'
 ORG_MOBILE_PHONE_NUMBER = '3a029778616fb8d7b46a80cb257b120fc39ebbb9'
 ORG_EMAIL = '79df0042ead91e4d68adfae2c95f7a05cf6fb91f'
@@ -33,6 +33,8 @@ ORG_REGISTRATION_NUMBER = '572f5c7d9e53e4e3ba6aef777a2cb5bccd29d0d0'
 POLICY_OID = 'a9bba6a79606e925f7682d1884c7ed8829cdf5e6'
 SELLER_LIST = '4ab090f2198c1c3f4b8dfff65bd7bfe7b0046d5b'
 POLICY_ON_ATTB_LIST = 'bf0217a840456447e891aebbf04ad4e433440a8e'
+PAYMENT_AMMOUNT = 'ac342bbd15a8163f75adf6fab3851b720ff716b5'
+POLICY_START_DATE = '535dfbaa8ee8143dfd74ada7df72c4df1a2c14db'
 
 
 class Pipedrive:
@@ -143,7 +145,9 @@ class Pipedrive:
                 OBJECTS: truncate_utf8(policy_info_arr[3]),
                 END_DATE: policy_info_arr[4],
                 INSURER: Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
-                POLICY_OID: str(policy_info_arr[10])
+                POLICY_OID: str(policy_info_arr[10]),
+                PAYMENT_AMMOUNT: str(policy_info_arr[11]),
+                POLICY_START_DATE: policy_info_arr[12]
             }
         }
 
@@ -798,8 +802,8 @@ class Pipedrive:
                     RENEWED_OFFER_QUANTITY: info[1],
                     RENEWAL_POLICY_QUANTITY: info[2],
                     RENEWED_POLICY_INSURER: info[3],
-                    STATUS: info[4],
-                    RENEWAL: info[5],
+                    # STATUS: info[4],
+                    # RENEWAL: info[5],
                     RENEWAL_START_DATE: info[6],
                     REGISTRATION_CERTIFICATE_NO: info[7],
                     SELLER_LIST: info[8],

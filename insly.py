@@ -377,6 +377,7 @@ def fetch_policy_data(data, policy):
     p_currency = policy.get('policy_premium_currency') or 'EUR'
     p_summ = policy.get('policy_payment_sum')
     p_description = policy.get('policy_description')
+    p_date_start = datetime.strptime(policy.get('policy_date_start'), "%d.%m.%Y").strftime("%Y-%m-%d")
     p_date_end = datetime.strptime(policy.get('policy_date_end'), "%d.%m.%Y").strftime("%Y-%m-%d")
     p_number = policy.get('policy_no') or 'Policy number is missing.'
     p_installment_status = ''  # It will be determined in the 'get_customer_policy'
@@ -385,9 +386,10 @@ def fetch_policy_data(data, policy):
     p_broker_name = get_broker_person_name(data.get('broker_person_oid'))
     p_title = data.get('customer_name') + " - " + p_number + " - " + p_type
     p_oid = policy.get('policy_oid')
+    p_installments_number = policy.get('policy_installments')
 
-    policy_info = (p_title, p_currency, p_summ, p_description, p_date_end, p_number,
-                   p_insurer, p_installment_status, p_type, p_broker_name, p_oid)
+    policy_info = (p_title, p_currency, p_summ, p_description, p_date_end, p_number, p_insurer,
+                   p_installment_status, p_type, p_broker_name, p_oid, p_installments_number, p_date_start)
     object_info = get_policy_object(p_oid)
 
     return policy_info, object_info
