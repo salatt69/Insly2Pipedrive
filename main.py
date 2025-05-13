@@ -90,6 +90,7 @@ def process_customer(pd, oid, counter):
 
                 if deal_id is None:
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
+                    time.sleep(3)
                 else:
                     pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
 
