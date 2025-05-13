@@ -449,7 +449,7 @@ class Pipedrive:
                     for item in items:
                         deal_id = item['item']['id']
                         deal_title = item['item']['title']
-                        return deal_id, deal_title
+                        return deal_id, deal_title, None
 
                 else:
                     return None, None, None

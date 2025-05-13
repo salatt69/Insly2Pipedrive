@@ -86,7 +86,7 @@ def process_customer(pd, oid, counter):
                 entity_id, entype = person_id, 'person'
 
             for i in range(len(policy_i)):
-                deal_id, deal_title = pd.Search.deal(policy_i[i][10]) or (None, None)
+                deal_id, deal_title, _ = pd.Search.deal(policy_i[i][10]) or (None, None, None)
 
                 if deal_id is None:
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
@@ -119,7 +119,7 @@ def process_customer(pd, oid, counter):
             print(f"\nAttempts left: {max_retry_attempts - retry_attempts}")
 
             if max_retry_attempts - retry_attempts == 0:
-                print(f"Returning to whatever it is...\n")
+                print(f"Returning to #{counter + 1}\n")
                 return
 
         except Exception as e:
