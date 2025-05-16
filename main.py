@@ -240,7 +240,12 @@ def run_daily():
         None: The function does not return any value, it repeatedly calls `main()` at scheduled intervals.
     """
     while True:
-        main()
+        try:
+            main()
+        except Exception as e:
+            print(f"An error occurred during main(): {e}")
+            print(traceback.format_exc())
+            
         now = datetime.datetime.now()
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
         sleep_time = (next_midnight - now).total_seconds()
