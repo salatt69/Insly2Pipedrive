@@ -6,7 +6,7 @@ import traceback
 
 from dotenv import load_dotenv
 from pipedrive import Pipedrive
-from insly import get_customer_policy, get_customer_list, is_it_fully_paid
+from insly import get_customer_policy, get_customer_list, is_it_fully_paid, is_it_expired
 from helper import retry_requests, fetch_non_api_data
 from spreadsheet_communication import read_data_from_worksheet, process_table_policies
 
@@ -132,7 +132,7 @@ def process_customer(pd, oid, counter):
         retry_delay = min(retry_delay * 2, 60)
 
 
-def main():
+def main(pd):
     """
     Main function to retrieve customer data from Insly and process it in Pipedrive.
 
@@ -157,10 +157,6 @@ def main():
     """
     print('Initializing environment...')
     global DATASET
-    load_dotenv()
-
-    pd_token = os.getenv('PIPEDRIVE_TOKEN')
-    pd = Pipedrive(pd_token)
 
     print('Fetching data from table...')
     data = read_data_from_worksheet(start_row=5, custom_column=4, sheet_number=1)
@@ -201,25 +197,26 @@ def main():
             continue
         process_table_policies(pd, policy_numbers[i], i, DATASET)
 
-    # ########################################
-    # ### FILTERED DEALS STATUS ASSIGNMENT ###
-    # ########################################
-    #
-    # print('Fetching filtered deals...')
-    # filtered_deals = pd.Search.all_deals()
-    # print(f"{len(filtered_deals)} deals found!\n")
-    #
-    # for i in range(len(filtered_deals)):
-    #     policy_oid = filtered_deals[i].get('policy')
-    #     deal_id = filtered_deals[i].get('id')
-    #
-    #     print(f"#{i + 1} P_OID: {policy_oid}")
-    #
-    #     if is_it_fully_paid(policy_oid):
-    #         pd.Update.deal_status(deal_id, 'won')
-    #         time.sleep(1)
-    #     else:
-    #         print(f"\tNot fully paid")
+
+def filtered_auto_close(pd):
+    print('Fetching filtered deals...')
+    filtered_deals = pd.Search.all_deals()
+    print(f"{len(filtered_deals)} deals found!\n")
+
+    for i in range(len(filtered_deals)):
+        policy_oid = filtered_deals[i].get('policy')
+        deal_id = filtered_deals[i].get('id')
+
+        print(f"#{i + 1} P_OID: {policy_oid}")
+
+        if is_it_fully_paid(policy_oid):
+            if is_it_expired(policy_oid):
+                pd.Update.deal_status(deal_id, 'won')
+                time.sleep(1)
+            else:
+                print(f"\tNot expired")
+        else:
+            print(f"\tNot fully paid")
 
 
 def run_daily():
@@ -239,13 +236,24 @@ def run_daily():
     Returns:
         None: The function does not return any value, it repeatedly calls `main()` at scheduled intervals.
     """
+    load_dotenv()
+    pd_token = os.getenv('PIPEDRIVE_TOKEN')
+    pd = Pipedrive(pd_token)
+
     while True:
         try:
-            main()
+            now = datetime.datetime.now()
+            if now.weekday() == 5:
+                print("It's Saturday!")
+                filtered_auto_close(pd)
+            else:
+                print("It's not Saturday.")
+                main(pd)
+
         except Exception as e:
             print(f"An error occurred during main(): {e}")
             print(traceback.format_exc())
-            
+
         now = datetime.datetime.now()
         next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
         sleep_time = (next_midnight - now).total_seconds()

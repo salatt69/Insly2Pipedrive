@@ -497,6 +497,29 @@ def is_it_fully_paid(policy_oid):
         return False
 
 
+def is_it_expired(policy_oid):
+    url = 'https://vingo-api.insly.com/api/policy/getpolicy'
+    body = {"policy_oid": policy_oid}
+    headers = {'Authorization': f'Bearer {INSLY_TOKEN}'}
+
+    response = requests.post(url=url, json=body, headers=headers)
+
+    if response.status_code == 200:
+        policy = response.json()
+
+        latest_date = datetime(2024, 1, 1)
+        p_date_end_raw = policy.get('policy_date_end', '')
+        exp_date = datetime.strptime(p_date_end_raw, "%d.%m.%Y")
+        current_date = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+
+        if latest_date <= exp_date < current_date:
+            return True
+        else:
+            return False
+    else:
+        print(f"'is_it_expired': Request failed with status code {response.status_code}")
+        return False
+
 def fetch_payment_data(policy):
     installments_html_data = """
     <table border="1" cellspacing="0" cellpadding="8" style="font-family: sans-serif; font-size: 18px; width: 80%; margin: auto; border-collapse: collapse;">

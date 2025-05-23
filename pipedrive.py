@@ -493,7 +493,7 @@ class Pipedrive:
             url = f'{BASE_URL_V1}/deals'
             params = {
                 'api_token': PIPEDRIVE_TOKEN,
-                'filter_id': 68,
+                'filter_id': 107,
                 'start': start_pos,
                 'limit': limit
             }
