@@ -136,7 +136,7 @@ class Pipedrive:
             "currency": policy_info_arr[1],
             "value": policy_info_arr[2],
             "expected_close_date": policy_info_arr[4],
-            "status": policy_info_arr[7],
+            # "status": policy_info_arr[7],
             "visible_to": 3,
             "custom_fields": {
                 # SELLER: policy_info_arr[9],
@@ -150,6 +150,9 @@ class Pipedrive:
                 POLICY_START_DATE: policy_info_arr[12]
             }
         }
+
+        if policy_info_arr[7] is not None:
+            body["status"] = policy_info_arr[7]
 
         if policy_info_arr[7] == 'won':
             body['won_time'] = (datetime.strptime(policy_info_arr[4], "%Y-%m-%d")

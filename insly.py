@@ -133,7 +133,7 @@ def get_customer_policy(oid, counter):
 
                     fetched_p_info = list(fetched_p_info)
 
-                    fetched_p_info[7] = 'open'  # Default
+                    fetched_p_info[7] = None # Default
 
                     if latest_date <= exp_date < current_date:
                         fetched_p_info[7] = 'lost'  # Default if expired
