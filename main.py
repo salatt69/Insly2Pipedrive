@@ -90,11 +90,11 @@ def process_customer(pd, oid, counter):
 
                 if deal_id is None:
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
+                    process_table_policies(pd, policy_i[i][5], i, DATASET)
                     time.sleep(3)
+
                 else:
                     pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
-
-                process_table_policies(pd, policy_i[i][5], i, DATASET)
 
                 note_id = pd.Search.note(deal_id)
 
@@ -184,18 +184,18 @@ def main(pd):
     ### TABLE DATA FETCHING ###
     ###########################
 
-    if DATASET[0] is None:
-        print("No data found. Exiting.")
-        return
-
-    policy_numbers = DATASET[0]["Polise"].tolist()
-    print(policy_numbers)
-
-    for i in range(len(policy_numbers)):
-        if policy_numbers[i] == '-- nav izdota --':
-            print(f"#{i + 1} P_NO: -- nav izdota --")
-            continue
-        process_table_policies(pd, policy_numbers[i], i, DATASET)
+    # if DATASET[0] is None:
+    #     print("No data found. Exiting.")
+    #     return
+    #
+    # policy_numbers = DATASET[0]["Polise"].tolist()
+    # print(policy_numbers)
+    #
+    # for i in range(len(policy_numbers)):
+    #     if policy_numbers[i] == '-- nav izdota --':
+    #         print(f"#{i + 1} P_NO: -- nav izdota --")
+    #         continue
+    #     process_table_policies(pd, policy_numbers[i], i, DATASET)
 
 
 def filtered_auto_close(pd):
@@ -212,11 +212,11 @@ def filtered_auto_close(pd):
         if is_it_fully_paid(policy_oid):
             if is_it_expired(policy_oid):
                 pd.Update.deal_status(deal_id, 'won')
-                time.sleep(1)
             else:
                 print(f"\tNot expired")
         else:
             print(f"\tNot fully paid")
+        time.sleep(1)
 
 
 def run_daily():
