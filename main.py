@@ -90,8 +90,9 @@ def process_customer(pd, oid, counter):
 
                 if deal_id is None:
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
+                    print(f"Waiting for deal (id: {deal_id}) to be created...")
+                    time.sleep(5)
                     process_table_policies(pd, policy_i[i][5], i, DATASET)
-                    time.sleep(3)
 
                 else:
                     pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
@@ -162,6 +163,7 @@ def main(pd):
     data = read_data_from_worksheet(start_row=5, custom_column=4, sheet_number=1)
     seller_data = read_data_from_worksheet(start_row=2, sheet_number=2)
     policy_on_attb_data = read_data_from_worksheet(start_row=2, sheet_number=3)
+
     DATASET = (data, seller_data, policy_on_attb_data)
 
     print('Starting program...')
