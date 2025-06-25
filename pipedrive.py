@@ -305,7 +305,7 @@ class Pipedrive:
             "content": content,
             "deal_id": deal_id,
             "user_id": note_owner,
-            "pinned_to_deal_flag": True
+            "pinned_to_deal_flag": False
         }
         return body
 
@@ -462,7 +462,7 @@ class Pipedrive:
                 print(response.json())
 
         @staticmethod
-        def all_deals(start_pos=0, limit=50, results=None):
+        def all_deals(start_pos=1, limit=50, results=None, filter_id=None):
             """
             Retrieves all deals from Pipedrive, collecting `id` and values associated with `POLICY_OID`.
 
@@ -493,7 +493,7 @@ class Pipedrive:
             url = f'{BASE_URL_V1}/deals'
             params = {
                 'api_token': PIPEDRIVE_TOKEN,
-                'filter_id': 107,
+                'filter_id': filter_id,
                 'start': start_pos,
                 'limit': limit
             }
@@ -506,15 +506,24 @@ class Pipedrive:
                 if 'data' in data and isinstance(data['data'], list):
                     for item in data['data']:
                         policy_value = item.get(POLICY_OID)
+                        policy_number = item.get(POLICY_NO)
                         deal_id = item.get("id")
                         if policy_value is not None and deal_id is not None:
-                            results.append({"id": deal_id, "policy": policy_value})
+                            results.append({"id": deal_id, 
+                                            "policy": policy_value, 
+                                            "policy_number": policy_number
+                                            })
 
                 pagination = data.get('additional_data', {}).get('pagination', {})
                 if pagination.get('more_items_in_collection'):
                     next_start = pagination.get('next_start')
                     time.sleep(0.5)
-                    return Pipedrive.Search.all_deals(start_pos=next_start, limit=limit, results=results)
+                    return Pipedrive.Search.all_deals(
+                        start_pos=next_start, 
+                        limit=limit, 
+                        results=results, 
+                        filter_id=filter_id
+                    )
 
             else:
                 print(f"Request failed with status code {response.status_code}")
@@ -970,3 +979,36 @@ class Pipedrive:
             else:
                 print(f"'update_note': Request failed with status code {response.status_code}")
                 print(response.json())
+
+    class Get:
+
+        @staticmethod
+        def details_of_deal(deal_id):
+            url = f"{BASE_URL_V1}/deals/{deal_id}"
+            params = {'api_token': PIPEDRIVE_TOKEN}
+
+            try:
+                response = requests.get(url=url, params=params)
+                response.raise_for_status()
+                data = response.json()
+
+                deal = data.get('data', {})
+                if not deal:
+                    return []
+
+                results = []
+                deal_id = deal.get('id')
+                deal_title = deal.get('title')
+
+                person = deal.get("person_id")
+                org = deal.get("org_id")
+                client_name = (person or {}).get("name") or (org or {}).get("name")
+                deal_status = deal.get('status')
+
+                results.append((deal_id, deal_title, client_name, deal_status))
+
+                return results
+
+            except requests.RequestException as e:
+                print(f"'get_details_of_deal': Request failed with error: {e}")
+                return []

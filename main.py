@@ -92,7 +92,7 @@ def process_customer(pd, oid, counter):
                     deal_id = pd.Add.deal(policy_i[i], entity_id, entype, customer_i[0][5])
                     print(f"Waiting for deal (id: {deal_id}) to be created...")
                     time.sleep(5)
-                    process_table_policies(pd, policy_i[i][5], i, DATASET)
+                    process_table_policies(pd, policy_i[i][5], i, DATASET, deal_id)
 
                 else:
                     pd.Update.deal(deal_id, policy_i[i], entity_id, entype)
@@ -182,27 +182,10 @@ def main(pd):
         process_customer(pd, oid, i)
         time.sleep(1)
 
-    ###########################
-    ### TABLE DATA FETCHING ###
-    ###########################
-
-    # if DATASET[0] is None:
-    #     print("No data found. Exiting.")
-    #     return
-    #
-    # policy_numbers = DATASET[0]["Polise"].tolist()
-    # print(policy_numbers)
-    #
-    # for i in range(len(policy_numbers)):
-    #     if policy_numbers[i] == '-- nav izdota --':
-    #         print(f"#{i + 1} P_NO: -- nav izdota --")
-    #         continue
-    #     process_table_policies(pd, policy_numbers[i], i, DATASET)
-
 
 def filtered_auto_close(pd):
     print('Fetching filtered deals...')
-    filtered_deals = pd.Search.all_deals()
+    filtered_deals = pd.Search.all_deals(filter_id=107)
     print(f"{len(filtered_deals)} deals found!\n")
 
     for i in range(len(filtered_deals)):
@@ -221,6 +204,30 @@ def filtered_auto_close(pd):
         time.sleep(1)
 
 
+def update_deals_with_no_seller(pd):
+    cache = []
+    print('Fetching filtered deals...')
+    filtered_deals = pd.Search.all_deals(filter_id=74)
+    print(f"{len(filtered_deals)} deals found!\n")
+
+    for i in range(len(filtered_deals)):
+        policy_oid = filtered_deals[i].get('policy')
+        deal_id = filtered_deals[i].get('id')
+        policy_number = filtered_deals[i].get('policy_number')
+
+        if policy_number == 'Policy number is missing.':
+            continue
+            
+        if policy_number in cache:
+            print(f"Skipping {policy_number}. Have already been processed.")
+            continue
+        else:
+            cache.append(policy_number)
+
+        process_table_policies(pd, policy_number, i, DATASET, deal_id)
+
+        time.sleep(1)
+        
 def run_daily():
     """
     Runs the `main()` function once a day, at midnight UTC, in an infinite loop.
@@ -251,6 +258,7 @@ def run_daily():
             else:
                 print("It's not Saturday.")
                 main(pd)
+                update_deals_with_no_seller(pd)
 
         except Exception as e:
             print(f"An error occurred during main(): {e}")

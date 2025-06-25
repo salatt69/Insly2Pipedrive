@@ -166,7 +166,7 @@ def fetch_table(url):
     return pandas.read_csv(url, skiprows=2, header=1)
 
 
-def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
+def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data, client_name):
     """
     Extracts policy-related information from multiple datasets based on a policy number.
 
@@ -193,24 +193,29 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     policy_on_attb = get_value_in_same_row(data,
                                            policy_number,
                                            "Polise",
-                                           "Atb. par polisi") or None
+                                           "Atb. par polisi",
+                                           client_name) or None
     renewed_offer_quantity = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Atjaunotais piedāvājums: numurs") or None
+                                                   "Atjaunotais piedāvājums: numurs",
+                                                   client_name) or None
     renewal_policy_quantity = get_value_in_same_row(data,
                                                     policy_number,
                                                     "Polise",
-                                                    "Atjaunotā polise: numurs") or None
+                                                    "Atjaunotā polise: numurs",
+                                                    client_name) or None
     renewed_policy_insurer = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Atjaunotā polise: apdrošinātājs") or None
+                                                   "Atjaunotā polise: apdrošinātājs",
+                                                   client_name) or None
 
     status_label = get_value_in_same_row(data,
                                          policy_number,
                                          "Polise",
-                                         "Statuss") or None
+                                         "Statuss",
+                                         client_name) or None
     if status_label == "nav spēkā":
         status = 40
     elif status_label == "spēkā":
@@ -221,7 +226,8 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     renewal_label = get_value_in_same_row(data,
                                           policy_number,
                                           "Polise",
-                                          "Atjaunojums") or None
+                                          "Atjaunojums",
+                                          client_name) or None
     if renewal_label == "atjaunots":
         renewal = 42
     elif renewal_label == "atjaunošana nav sākta":
@@ -232,7 +238,8 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     renewal_start_date_str = get_value_in_same_row(data,
                                                    policy_number,
                                                    "Polise",
-                                                   "Renewal start date") or None
+                                                   "Renewal start date",
+                                                   client_name) or None
     if renewal_start_date_str is not None:
         renewal_start_date = format_date(renewal_start_date_str)
     else:
@@ -241,11 +248,13 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     registration_certificate_no = get_value_in_same_row(data,
                                                         policy_number,
                                                         "Polise",
-                                                        "Reģ. apliecības nr.") or None
+                                                        "Reģ. apliecības nr.",
+                                                        client_name) or None
     seller_list = get_value_in_same_row(data,
                                         policy_number,
                                         "Polise",
-                                        "Pārdevējs") or None
+                                        "Pārdevējs",
+                                        client_name) or None
     seller = get_value_in_same_row(seller_data,
                                    seller_list,
                                    "Pārdevējs",
@@ -255,51 +264,59 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data):
     policy_on_attb_list = get_value_in_same_row(data,
                                                 policy_number,
                                                 "Polise",
-                                                "Atb. par polisi") or None
+                                                "Atb. par polisi",
+                                                client_name) or None
     policy_on_attb = get_value_in_same_row(policy_on_attb_data,
                                            policy_on_attb_list,
                                            "Atb. par polisi",
                                            "ID_PipeDrive") or None
     pipedrive_policy_on_attb_option_id = None if policy_on_attb is None else int(policy_on_attb)
 
+
     info = (policy_on_attb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
             status, renewal, renewal_start_date, registration_certificate_no, pipedrive_seller_option_id,
             pipedrive_policy_on_attb_option_id)
 
+    print(info)
+    
     return info
 
 
-def get_value_in_same_row(df, search_value, search_column, target_column):
+
+def get_value_in_same_row(df, search_value, search_column, target_column, client_name=None):
     """
     Retrieves a value from a specified column in the same row where a given value is found.
+    If `client_name` is provided, it additionally checks that the 'Klients' column matches it.
 
     Args:
         df (pandas.DataFrame): The dataframe to search within.
         search_value (any): The value to locate within the `search_column`.
         search_column (str): The column name where `search_value` is searched.
         target_column (str): The column name from which to retrieve the corresponding value.
+        client_name (any, optional): The expected client name in the same row. Defaults to None.
 
     Returns:
-        any | None: The value from `target_column` in the same row as `search_value`,
-        or None if no match is found or the value is NaN.
-
-    .. rubric:: Behavior
-    - Searches for `search_value` in `search_column` of the dataframe.
-    - If a matching row is found, retrieves the corresponding value from `target_column`.
-    - Returns `None` if no match is found or the retrieved value is NaN.
-
-    Note:
-        - Uses `pandas.isna()` to check for missing values and convert them to `None`.
+        any | None: The value from `target_column` in the matching row,
+        or None if no match is found, if `client_name` doesn't match (when given), or if value is NaN.
     """
     import pandas
 
-    result = df.loc[df[search_column] == search_value, target_column]
+    # Find all matching rows for the search value
+    matching_rows = df[df[search_column] == search_value]
 
-    if result.empty:
-        return None  # No match found
+    if matching_rows.empty:
+        return None
 
-    value = result.values[0]
-    return None if pandas.isna(value) else value  # Convert NaN to None
+    for _, row in matching_rows.iterrows():
+        # If client_name is provided, make sure it matches the row
+        if client_name is not None and row.get("Klients") != client_name:
+            continue  # Skip this row if client doesn't match
+
+        value = row[target_column]
+        return None if pandas.isna(value) else value
+
+    # If client_name was provided but no row matched it
+    return None
 
 
 def format_date(date_str):
