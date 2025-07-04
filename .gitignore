@@ -171,3 +171,4 @@ cython_debug/
 .pypirc
 
 keyfile.json
+.vscode

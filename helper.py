@@ -166,7 +166,7 @@ def fetch_table(url):
     return pandas.read_csv(url, skiprows=2, header=1)
 
 
-def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data, client_name):
+def fetch_non_api_data(policy_number, data, seller_data, policy_on_atb_data, client_name):
     """
     Extracts policy-related information from multiple datasets based on a policy number.
 
@@ -190,7 +190,7 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data, cl
         - Uses `get_value_in_same_row()` to extract data from rows.
         - Uses `format_date()` to standardize date formatting.
     """
-    policy_on_attb = get_value_in_same_row(data,
+    policy_on_atb = get_value_in_same_row(data,
                                            policy_number,
                                            "Polise",
                                            "Atb. par polisi",
@@ -259,23 +259,22 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_attb_data, cl
                                    seller_list,
                                    "Pārdevējs",
                                    "ID_PipeDrive") or None
-    pipedrive_seller_option_id = None if seller is None else int(seller)
+    pipedrive_seller_option = seller_list if seller is None else int(seller)
 
-    policy_on_attb_list = get_value_in_same_row(data,
+    policy_on_atb_list = get_value_in_same_row(data,
                                                 policy_number,
                                                 "Polise",
                                                 "Atb. par polisi",
                                                 client_name) or None
-    policy_on_attb = get_value_in_same_row(policy_on_attb_data,
-                                           policy_on_attb_list,
+    policy_on_atb = get_value_in_same_row(policy_on_atb_data,
+                                           policy_on_atb_list,
                                            "Atb. par polisi",
                                            "ID_PipeDrive") or None
-    pipedrive_policy_on_attb_option_id = None if policy_on_attb is None else int(policy_on_attb)
+    pipedrive_policy_on_atb_option = policy_on_atb_list if policy_on_atb is None else int(policy_on_atb)
 
-
-    info = (policy_on_attb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
-            status, renewal, renewal_start_date, registration_certificate_no, pipedrive_seller_option_id,
-            pipedrive_policy_on_attb_option_id)
+    info = (policy_on_atb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
+            status, renewal, renewal_start_date, registration_certificate_no, pipedrive_seller_option,
+            pipedrive_policy_on_atb_option)
 
     print(info)
     

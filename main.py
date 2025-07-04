@@ -172,7 +172,7 @@ def main(pd):
         print("No customer OIDs found. Exiting.")
         return
 
-    start_from = 1
+    start_from = 18616
 
     remaining_oids = customer_oids[start_from - 1:]
 

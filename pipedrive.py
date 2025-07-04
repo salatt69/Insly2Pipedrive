@@ -31,8 +31,8 @@ ORG_MOBILE_PHONE_NUMBER = '3a029778616fb8d7b46a80cb257b120fc39ebbb9'
 ORG_EMAIL = '79df0042ead91e4d68adfae2c95f7a05cf6fb91f'
 ORG_REGISTRATION_NUMBER = '572f5c7d9e53e4e3ba6aef777a2cb5bccd29d0d0'
 POLICY_OID = 'a9bba6a79606e925f7682d1884c7ed8829cdf5e6'
-SELLER_LIST = '4ab090f2198c1c3f4b8dfff65bd7bfe7b0046d5b'
-POLICY_ON_ATTB_LIST = 'bf0217a840456447e891aebbf04ad4e433440a8e'
+SELLER_OPTION = '4ab090f2198c1c3f4b8dfff65bd7bfe7b0046d5b'
+POLICY_ON_ATB_OPTION = 'bf0217a840456447e891aebbf04ad4e433440a8e'
 PAYMENT_AMMOUNT = 'ac342bbd15a8163f75adf6fab3851b720ff716b5'
 POLICY_START_DATE = '535dfbaa8ee8143dfd74ada7df72c4df1a2c14db'
 
@@ -45,58 +45,28 @@ class Pipedrive:
         PIPEDRIVE_TOKEN = token
 
     @staticmethod
-    def find_custom_field(custom_field_key, option_label):
-        """
-        Retrieves the ID of a specific option within a custom field in Pipedrive.
-
-        This method searches for a custom field by its key and then attempts to find
-        an option within that field that matches the given label.
-
-        Args:
-            custom_field_key (str): The unique key of the custom field, which is mapped
-                                    to its field ID in 'custom_field_ids.json'.
-            option_label (str): The label of the option to search for within the custom field.
-
-        Returns:
-            int | None: The ID of the matching option if found, otherwise None.
-
-        .. rubric:: Behavior
-        - Reads 'custom_field_ids.json' to get the field ID corresponding to `custom_field_key`.
-        - Sends a GET request to the Pipedrive API to retrieve details of the specified custom field.
-        - Iterates through the available options in the field to find one that matches `option_label`.
-        - If a match is found (case-insensitive comparison), returns the option's ID.
-        - Logs an error message and prints the response JSON if the API request fails.
-
-        Note:
-            - If `option_label` is empty or None, the function exits early without making an API request.
-            - The function relies on `BASE_URL_V1` and `PIPEDRIVE_TOKEN` for API communication.
-        """
+    def find_custom_field_option_id(custom_field_key, option_label):
         if not option_label:
+            print("No 'option_label' provided!")
             return
 
-        # Find field_id by its key from 'custom_field_ids.json'
-        with open('custom_field_ids.json', 'r') as f:
-            ids = json.load(f)
-        filed_id = ids.get(custom_field_key)
+        field_data = Pipedrive.Get.deal_field_data(custom_field_key)
 
-        url = f'{BASE_URL_V1}/dealFields/{filed_id}'
-        params = {'api_token': PIPEDRIVE_TOKEN}
-
-        response = requests.get(url=url, params=params)
-
-        if response.status_code == 200:
-            data = response.json()
-
-            options = data["data"]["options"]
-            for option in options:
-                if option_label.lower() in option['label'].lower():
-                    return option['id']
-
-        else:
-            print(f'Failed while searching for custom field: {custom_field_key}. Code: {response.status_code}')
-            print(response.json())
-
-        pass
+        field_id = field_data[0]['field_id']
+        field_name = field_data[0]['field_name']
+        options = field_data[0]['options']
+        
+        for option in options:
+            if option_label.lower() in option['label'].lower():
+                return option['id']
+        
+        print(f"No option found by label '{option_label}', creating new option...")
+        options.append({'label': option_label})
+        
+        time.sleep(1)
+        Pipedrive.Update.field_data(field_id, field_name, options)
+        time.sleep(1)
+        return Pipedrive.find_custom_field_option_id(custom_field_key, option_label)
 
     @staticmethod
     def get_deal_body(policy_info_arr, entity_id, entype, deal_owner):
@@ -120,7 +90,7 @@ class Pipedrive:
           `value`, `expected_close_date`, `status`, and `visible_to`.
         - Maps predefined keys in `custom_fields` to their corresponding values
           from `policy_info_arr`.
-        - Uses :meth:`Pipedrive.find_custom_field` to dynamically retrieve the ID of
+        - Uses :meth:`Pipedrive.find_custom_field_option_id` to dynamically retrieve the ID of
           the insurer and product fields based on their names.
         - Truncates object details using `truncate_utf8()` to ensure compliance
           with character limits.
@@ -141,10 +111,10 @@ class Pipedrive:
             "custom_fields": {
                 # SELLER: policy_info_arr[9],
                 POLICY_NO: policy_info_arr[5],
-                PRODUCT: Pipedrive.find_custom_field(PRODUCT, policy_info_arr[8]),
+                PRODUCT: Pipedrive.find_custom_field_option_id(PRODUCT, policy_info_arr[8]),
                 OBJECTS: truncate_utf8(policy_info_arr[3]),
                 END_DATE: policy_info_arr[4],
-                INSURER: Pipedrive.find_custom_field(INSURER, policy_info_arr[6]),
+                INSURER: Pipedrive.find_custom_field_option_id(INSURER, policy_info_arr[6]),
                 POLICY_OID: str(policy_info_arr[10]),
                 PAYMENT_AMMOUNT: str(policy_info_arr[11]),
                 POLICY_START_DATE: policy_info_arr[12]
@@ -857,8 +827,14 @@ class Pipedrive:
                     # RENEWAL: info[5],
                     RENEWAL_START_DATE: info[6],
                     REGISTRATION_CERTIFICATE_NO: info[7],
-                    SELLER_LIST: info[8],
-                    POLICY_ON_ATTB_LIST: info[9]
+                    SELLER_OPTION: (
+                        Pipedrive.find_custom_field_option_id(SELLER_OPTION, info[8])
+                        if not isinstance(info[8], int) else info[8]
+                    ),
+                    POLICY_ON_ATB_OPTION: (
+                        Pipedrive.find_custom_field_option_id(POLICY_ON_ATB_OPTION, info[9])
+                        if not isinstance(info[9], int) else info[9]
+                    )
                 }
             }
 
@@ -980,6 +956,40 @@ class Pipedrive:
                 print(f"'update_note': Request failed with status code {response.status_code}")
                 print(response.json())
 
+        @staticmethod
+        def field_data(field_id, field_name, options):
+            url = f"{BASE_URL_V1}/dealFields/{field_id}"
+            params = {'api_token': PIPEDRIVE_TOKEN}
+            
+            processed_options = []
+            
+            for option in options:
+                if "id" in option:
+                    processed_options.append({
+                        "id": option["id"],
+                        "label": option["label"]
+                    })
+                else:
+                    processed_options.append({
+                        "label": option["label"]
+                    })
+
+            body = {
+                "name": field_name,
+                "options": processed_options,
+                "add_visible_flag": True
+            }
+            
+            response = requests.put(url=url, params=params, json=body)
+            
+            if response.status_code == 200:
+                print(f"New option created for '{field_name}'!")
+            else:
+                print(f"'update_field_data': Request failed with status code {response.status_code}")
+                print(response.json())
+            
+            pass
+
     class Get:
 
         @staticmethod
@@ -1012,3 +1022,53 @@ class Pipedrive:
             except requests.RequestException as e:
                 print(f"'get_details_of_deal': Request failed with error: {e}")
                 return []
+        
+        @staticmethod
+        def deal_field_data(field_key, start_pos=1, limit=100, results=None):
+            if results is None:
+                results = []
+
+            url = f'{BASE_URL_V1}/dealFields'
+            params = {
+                'api_token': PIPEDRIVE_TOKEN,
+                'start': start_pos,
+                'limit': limit
+            }
+
+            response = requests.get(url=url, params=params)
+
+            if response.status_code == 200:
+                data = response.json()
+
+                for item in data["data"]:
+                    if item["key"] in field_key:
+                        field_id = item.get("id")
+                        field_name = item.get("name")
+                        options = []
+                        for option in item.get("options", []):
+                            options.append({
+                                "id": option["id"],
+                                "label": option["label"]
+                            })
+                        results.append({
+                            "field_id": field_id,
+                            "field_name": field_name,
+                            "options": options
+                        })
+
+                pagination = data.get('additional_data', {}).get('pagination', {})
+                if pagination.get('more_items_in_collection'):
+                    next_start = pagination.get('next_start')
+                    time.sleep(0.5)
+                    return Pipedrive.Search.all_deals(
+                        field_key,
+                        start_pos=next_start, 
+                        limit=limit, 
+                        results=results
+                    )
+
+            else:
+                print(f"Request failed with status code {response.status_code}")
+                print(response.json())
+
+            return results
