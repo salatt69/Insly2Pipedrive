@@ -167,7 +167,7 @@ def main(pd):
     DATASET = (data, seller_data, policy_on_attb_data)
 
     print('Starting program...')
-    customer_oids = [10777055]
+    customer_oids = get_customer_list()
     if not customer_oids:
         print("No customer OIDs found. Exiting.")
         return
