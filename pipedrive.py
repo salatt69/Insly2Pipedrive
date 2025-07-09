@@ -827,6 +827,7 @@ class Pipedrive:
                     # RENEWAL: info[5],
                     RENEWAL_START_DATE: info[6],
                     REGISTRATION_CERTIFICATE_NO: info[7],
+                    INSURER: Pipedrive.find_custom_field_option_id(INSURER, info[10]),
                     SELLER_OPTION: (
                         Pipedrive.find_custom_field_option_id(SELLER_OPTION, info[8])
                         if not isinstance(info[8], int) else info[8]

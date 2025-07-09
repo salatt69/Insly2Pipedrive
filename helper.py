@@ -190,6 +190,9 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_atb_data, cli
         - Uses `get_value_in_same_row()` to extract data from rows.
         - Uses `format_date()` to standardize date formatting.
     """
+    if policy_number == '71.06.310508':
+        print('FOUND 71.06.310508!')
+        
     policy_on_atb = get_value_in_same_row(data,
                                            policy_number,
                                            "Polise",
@@ -210,6 +213,11 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_atb_data, cli
                                                    "Polise",
                                                    "Atjaunotā polise: apdrošinātājs",
                                                    client_name) or None
+    policy_insurer = get_value_in_same_row(data, 
+                                           policy_number,
+                                           "Polise",
+                                           "Apdrošinātājs",
+                                           client_name) or None
 
     status_label = get_value_in_same_row(data,
                                          policy_number,
@@ -274,7 +282,7 @@ def fetch_non_api_data(policy_number, data, seller_data, policy_on_atb_data, cli
 
     info = (policy_on_atb, renewed_offer_quantity, renewal_policy_quantity, renewed_policy_insurer,
             status, renewal, renewal_start_date, registration_certificate_no, pipedrive_seller_option,
-            pipedrive_policy_on_atb_option)
+            pipedrive_policy_on_atb_option, policy_insurer)
 
     print(info)
     
